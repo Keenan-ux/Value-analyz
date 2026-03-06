@@ -7,11 +7,10 @@ const RUNTIME_API_KEY = ""; // Runtime provides the key automatically
 // Expanded from ~125 to 250+ vetted stocks to deeply dilute LLM biases
 const MODES = [
   { id: "scan", label: "I'm Feeling Lucky", desc: "Autonomously find undervalued stocks", icon: "🍀" },
-  { id: "analyze", label: "Analyze Ticker", desc: "Deep dive on a specific stock", icon: "📊" },
+  { id: "analyze", label: "Analyze Ticker", desc: "Deep dive on a specific stock or ETF", icon: "📊" },
   { id: "earnings", label: "Earnings Analysis", desc: "Post-earnings drift analysis", icon: "📈" },
   { id: "adr", label: "ADR Scanner", desc: "International value opportunities", icon: "🌍" },
   { id: "sector", label: "Contrarian Deep Value", desc: "Find strong companies in hated sectors", icon: "💣" },
-  { id: "etf", label: "ETF Deep Dive", desc: "Analyze and weight all holdings inside an ETF", icon: "🧺" },
 ];
 
 const TICKER_POOLS = {
@@ -541,14 +540,12 @@ const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLeng
 
     <div className="space-y-4">
       {MODES.map(o => {
-        if (o.id === "etf" && !isUnlocked) return null;
         return (
           <button key={o.id} onClick={() => setMode(o.id)} className="w-full glass-button rounded-xl p-5 px-6 cursor-pointer text-left flex items-center gap-4 group hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/10">
             <span className="text-3xl w-12 text-center">{o.icon}</span>
             <div className="flex-1">
               <div className="text-base font-semibold text-slate-200 mb-1">
                 {o.label}
-                {o.id === "etf" && <span className="ml-3 px-2 py-0.5 bg-[#D4A017]/20 text-[#D4A017] rounded text-[9px] font-mono tracking-widest uppercase">Unlocked</span>}
               </div>
               <div className="text-[13px] text-slate-400">{o.desc}</div>
             </div>
@@ -719,7 +716,7 @@ const WatchlistGrid = ({ watchlist, onSelect }) => (
   </div>
 );
 
-const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, marketCapFilter, setMarketCapFilter, files, setFiles }) => {
+const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, marketCapFilter, setMarketCapFilter, files, setFiles, isUnlocked, assetType, setAssetType, etfDepth, setEtfDepth, customEtfCount, setCustomEtfCount }) => {
   const activeMode = MODES.find(m => m.id === mode);
   const isTargeted = mode === "analyze" || mode === "earnings";
   const isValid = !isTargeted || ticker.trim().length > 0;
@@ -766,41 +763,83 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
               <input ref={inputRef} type="text" value={ticker} onChange={e => setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g, ""))} onKeyDown={e => { if (e.key === "Enter" && isValid) onRun(); }} placeholder="e.g. AAPL, INTC, MU" maxLength={6} className="w-full p-4 px-5 text-xl font-mono font-semibold bg-brand-dark/50 border border-brand-border focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl text-brand-gold outline-none tracking-widest transition-all shadow-inner" />
               <div className="mt-2 text-[11px] text-green-500 font-mono">● Real-time Finnhub quote will anchor the analysis</div>
             </div>
-            
-            <div className="mb-8 relative z-10">
-              <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-2 flex justify-between">
-                <span>Provide Documents (Optional)</span>
-                <span className="text-[#D4A017] lowercase">SEC filings or Earnings</span>
-              </label>
-              <div 
-                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
-                onDragLeave={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
-                onDrop={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); handleDrop(e); }}
-                className="border-2 border-dashed border-[#1E293B] rounded-xl p-6 text-center transition-colors relative hover:border-slate-500"
-              >
-                <input type="file" multiple accept="application/pdf,text/plain,text/csv" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                <div className="text-3xl mb-2 opacity-50">📄</div>
-                <div className="text-sm text-slate-300 font-medium mb-1">Drag & Drop PDFs here</div>
-                <div className="text-xs text-slate-500">or click to browse from your computer</div>
-              </div>
-              
-              {files.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {files.map((f, i) => (
-                    <div key={i} className="flex justify-between items-center p-3 pr-4 bg-[#111827] border border-[#1E293B] rounded-lg">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <span className="text-xl">📋</span>
-                        <div className="truncate">
-                          <div className="text-sm font-mono text-slate-200 truncate">{f.name}</div>
-                          <div className="text-[10px] text-slate-500 uppercase tracking-widest">{(f.size/1024/1024).toFixed(2)} MB</div>
-                        </div>
-                      </div>
-                      <button onClick={() => removeFile(i)} className="bg-transparent border-none text-slate-500 hover:text-red-500 cursor-pointer text-lg p-1 transition-colors">✕</button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="mb-6 relative z-10 flex gap-4">
+              <button onClick={() => setAssetType("stock")} className={`flex-1 py-3 rounded-xl font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${assetType === "stock" ? "bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]" : "bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200"}`}>Single Stock</button>
+              <button onClick={() => setAssetType("etf")} className={`flex-1 py-3 rounded-xl font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${assetType === "etf" ? "bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]" : "bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200"}`}>ETF (Fund)</button>
             </div>
+
+            {assetType === "etf" && (
+              <div className="mb-8 relative z-10 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-inner">
+                <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span>Valuation Depth</span>
+                  {!isUnlocked && <span className="text-[9px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30">LOCKED 🔒</span>}
+                  {isUnlocked && <span className="text-[9px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded border border-green-500/30">UNLOCKED 🔓</span>}
+                </label>
+                
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button onClick={() => setEtfDepth("lite")} className={`p-3 rounded-lg text-left border cursor-pointer transition-colors ${etfDepth === "lite" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017]" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600"}`}>
+                    <div className="font-bold text-sm mb-1">Lite Mode</div>
+                    <div className="text-[10px] text-slate-500 font-mono">Top 70% Weight / Max 20</div>
+                  </button>
+                  <button onClick={() => isUnlocked && setEtfDepth("deep")} className={`p-3 rounded-lg text-left border transition-colors ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "deep" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
+                    <div className="font-bold text-sm mb-1">Deep Analysis</div>
+                    <div className="text-[10px] text-slate-500 font-mono">Top 90% Weight</div>
+                  </button>
+                  <button onClick={() => isUnlocked && setEtfDepth("exhaustive")} className={`p-3 rounded-lg text-left border transition-colors ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "exhaustive" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
+                    <div className="font-bold text-sm mb-1">Exhaustive</div>
+                    <div className="text-[10px] text-slate-500 font-mono">100% of Holdings</div>
+                  </button>
+                  <button onClick={() => isUnlocked && setEtfDepth("custom")} className={`p-3 rounded-lg text-left border transition-colors flex flex-col justify-center ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "custom" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
+                    <div className="font-bold text-sm mb-1">Custom Top N</div>
+                    <div className="text-[10px] text-slate-500 font-mono">Specify exact count</div>
+                  </button>
+                </div>
+                
+                {etfDepth === "custom" && isUnlocked && (
+                  <div className="mt-3 flex items-center justify-between border-t border-[#1E293B] pt-4">
+                    <label className="text-xs font-mono text-slate-400">Number of Holdings:</label>
+                    <input type="number" min="1" max="500" value={customEtfCount} onChange={(e) => setCustomEtfCount(Math.max(1, parseInt(e.target.value) || 1))} className="w-20 bg-brand-dark/50 border border-brand-border focus:border-brand-gold rounded px-3 py-1.5 text-brand-gold font-mono text-center outline-none" />
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {assetType === "stock" && (
+              <div className="mb-8 relative z-10">
+                <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-2 flex justify-between">
+                  <span>Provide Documents (Optional)</span>
+                  <span className="text-[#D4A017] lowercase">SEC filings or Earnings</span>
+                </label>
+                <div 
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
+                  onDragLeave={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
+                  onDrop={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); handleDrop(e); }}
+                  className="border-2 border-dashed border-[#1E293B] rounded-xl p-6 text-center transition-colors relative hover:border-slate-500"
+                >
+                  <input type="file" multiple accept="application/pdf,text/plain,text/csv" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <div className="text-3xl mb-2 opacity-50">📄</div>
+                  <div className="text-sm text-slate-300 font-medium mb-1">Drag & Drop PDFs here</div>
+                  <div className="text-xs text-slate-500">or click to browse from your computer</div>
+                </div>
+                
+                {files.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {files.map((f, i) => (
+                      <div key={i} className="flex justify-between items-center p-3 pr-4 bg-[#111827] border border-[#1E293B] rounded-lg">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <span className="text-xl">📋</span>
+                          <div className="truncate">
+                            <div className="text-sm font-mono text-slate-200 truncate">{f.name}</div>
+                            <div className="text-[10px] text-slate-500 uppercase tracking-widest">{(f.size/1024/1024).toFixed(2)} MB</div>
+                          </div>
+                        </div>
+                        <button onClick={() => removeFile(i)} className="bg-transparent border-none text-slate-500 hover:text-red-500 cursor-pointer text-lg p-1 transition-colors">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <div className="mb-6 relative z-10">
@@ -1045,6 +1084,10 @@ export default function App() {
     catch (e) { return false; }
   });
   
+  const [etfDepth, setEtfDepth] = useState("lite");
+  const [assetType, setAssetType] = useState("stock");
+  const [customEtfCount, setCustomEtfCount] = useState(10);
+  
   const [username, setUsername] = useState(() => {
     try { return localStorage.getItem("value_analyst_username") || ""; }
     catch (e) { return ""; }
@@ -1171,13 +1214,32 @@ export default function App() {
     let finalTickerUsed = tk;
 
     try {
-      if (activeMode === "etf") {
+      if (isTargeted && assetType === "etf") {
         setStatusMsg(`Fetching full holdings for ETF ${tk}...`);
         const holdingsRaw = await fetchETFHoldings(tk, finnhubKey);
         
-        // Sort by percent descending and take all
-        const holdings = holdingsRaw.sort((a,b) => (b.percent || 0) - (a.percent || 0));
-        const totalWeight = holdings.reduce((sum, h) => sum + (h.percent || 0), 0);
+        let holdings = holdingsRaw.sort((a,b) => (b.percent || 0) - (a.percent || 0));
+        
+        // Apply Valuation Depth Filter
+        if (etfDepth === "custom" && customEtfCount) {
+          holdings = holdings.slice(0, customEtfCount);
+        } else if (etfDepth !== "exhaustive") {
+          const targetWeight = etfDepth === "lite" ? 70 : 90; // "deep" is 90
+          const maxCount = etfDepth === "lite" ? 20 : 500;
+          
+          let currentWeight = 0;
+          let keepCount = 0;
+          
+          for (let i = 0; i < holdings.length; i++) {
+            if (currentWeight >= targetWeight || keepCount >= maxCount) break;
+            currentWeight += (holdings[i].percent || 0);
+            keepCount++;
+          }
+          holdings = holdings.slice(0, Math.max(1, keepCount));
+        }
+
+        // Normalize the weights of the targeted subset so they equal exactly 100% locally
+        const subsetOriginalWeight = holdings.reduce((sum, h) => sum + (h.percent || 0), 0);
         
         let cumulativeScore = 0;
         let analyzedCount = 0;
@@ -1210,10 +1272,11 @@ export default function App() {
                               (tempSc.MANAGEMENT||0) + (tempSc.CATALYST||0) + (tempSc.RISK_PROFILE||0);
             
             if (trueScore > 0) {
-              const weightMultiplier = (h.percent || 0) / totalWeight;
-              cumulativeScore += (trueScore * weightMultiplier);
+              // Mathematical normalization: holding's physical weight divided by the subset's total weight
+              const normalizedWeightMultiplier = (h.percent || 0) / subsetOriginalWeight;
+              cumulativeScore += (trueScore * normalizedWeightMultiplier);
               analyzedCount++;
-              etfNotes += `${currentTicker}: ${trueScore}/90 (${((h.percent||0)/totalWeight*100).toFixed(2)}% adjusted weight)\n`;
+              etfNotes += `${currentTicker}: ${trueScore}/90 (${(normalizedWeightMultiplier * 100).toFixed(2)}% adjusted weight)\n`;
             }
           } catch(e) {
             console.warn(`Failed to analyze ${currentTicker} for ETF ${tk}`, e);
@@ -1516,7 +1579,7 @@ export default function App() {
           </>
         )}
 
-        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={() => run()} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} files={sessionFiles} setFiles={setSessionFiles} />}
+        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={() => run()} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} files={sessionFiles} setFiles={setSessionFiles} isUnlocked={isUnlocked} assetType={assetType} setAssetType={setAssetType} etfDepth={etfDepth} setEtfDepth={setEtfDepth} customEtfCount={customEtfCount} setCustomEtfCount={setCustomEtfCount} />}
         
         {unlucky && !loading && (
           <div className="animate-[fadeIn_0.4s_ease] bg-[#111827] border border-[#1E293B] rounded-xl p-10 text-center mt-6">
