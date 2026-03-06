@@ -72,7 +72,7 @@ Direction: [Increase / Decrease / Flat]
 Rationale: 2-3 sentences predicting the direction of future earnings based on your analysis above.
 
 ===SOURCES===
-List 3-5 specific URLs or Document Names that you sourced qualitative data from. Use bullet points. Ensure they are real sources.
+List 3-5 specific URLs or Document Names that you sourced qualitative data from. Use bullet points. Ensure they are real sources. If providing a URL, you MUST format it as a markdown link: [Source Name](https://...)
 
 ===SCORES===
 EARNINGS_QUALITY: 1-10
@@ -245,6 +245,17 @@ const parseKV = (t) => { if (!t) return {}; const f = {}; t.split("\n").forEach(
 const parseScores = (t) => { if (!t) return {}; const s = {}; t.split("\n").forEach(l => { const m = l.match(/^(\w+):\s*(\d+)/); if (m) s[m[1]] = parseInt(m[2]); }); return s; };
 const parseFV = (t) => { if (!t) return {}; const v = {}; t.split("\n").forEach(l => { const m = l.match(/^(BEAR|BASE|BULL):\s*(.+)/i); if (m) v[m[1].toUpperCase()] = m[2].trim(); }); return v; };
 
+const renderLinks = (text) => {
+  if (!text) return null;
+  const parts = text.split(/(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g);
+  return parts.map((part, i) => {
+    const match = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+    if (match) return <a key={i} href={match[2]} target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-400 underline break-all">{match[1]}</a>;
+    return part.split(/(https?:\/\/[^\s)]+)/g).map((sub, j) => 
+      sub.match(/^https?:\/\//) ? <a key={`${i}-${j}`} href={sub} target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-400 underline break-all">{sub}</a> : sub
+    );
+  });
+};
 
 // ─── UI COMPONENTS ───
 const Badge = ({ v }) => {
@@ -784,7 +795,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
       {parsed.SOURCES && (
         <div className="glass-panel p-6 mb-5 rounded-2xl print:break-inside-avoid bg-slate-900/40">
           <div className="flex items-center gap-2.5 mb-3.5"><span className="text-base">🔗</span><h3 className="m-0 text-[13px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Sources Used</h3></div>
-          <div className="text-[13px] leading-relaxed text-slate-300 font-mono whitespace-pre-wrap">{parsed.SOURCES}</div>
+          <div className="text-[13px] leading-relaxed text-slate-300 font-mono whitespace-pre-wrap">{renderLinks(parsed.SOURCES)}</div>
         </div>
       )}
 
