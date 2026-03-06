@@ -1098,8 +1098,8 @@ export default function App() {
                             (tempSc.VALUATION||0) + (tempSc.CAPITAL_ALLOCATION||0) + (tempSc.COMPETITIVE_MOAT||0) + 
                             (tempSc.MANAGEMENT||0) + (tempSc.CATALYST||0) + (tempSc.RISK_PROFILE||0);
           
-          if (trueScore >= 82) p.VERDICT = "Strong Buy";
-          else if (trueScore >= 75) p.VERDICT = "Buy";
+          if (trueScore >= 80) p.VERDICT = "Strong Buy";
+          else if (trueScore >= 70) p.VERDICT = "Buy";
           else if (trueScore >= 55) p.VERDICT = "Hold";
           else if (trueScore >= 45) p.VERDICT = "Avoid";
           else p.VERDICT = "Strong Avoid";
@@ -1152,7 +1152,7 @@ export default function App() {
           } else {
             sessionExcluded.push(currentTicker);
             if (attempt < maxAttempts) {
-              setStatusMsg(`Result: ${currentTicker} scored ${trueScore}/90 (${p.VERDICT}). Target is 75+. Rejecting and moving to next batch...`);
+              setStatusMsg(`Result: ${currentTicker} scored ${trueScore}/90 (${p.VERDICT}). Target is 70+. Rejecting and moving to next batch...`);
               await new Promise(r => setTimeout(r, 2000));
             }
             attempt++;
