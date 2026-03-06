@@ -425,6 +425,7 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
 );
 
 const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
+  const containerRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const startY = useRef(0);
   const startVal = useRef(value);
@@ -451,13 +452,23 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
     document.body.style.userSelect = "";
   }, []);
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const delta = e.deltaY > 0 ? -1 : 1;
-    const newVal = Math.max(min, Math.min(max, value + delta));
-    if (newVal !== value) onChange(newVal);
-  };
+  useEffect(() => {
+    const handleWheel = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const delta = e.deltaY > 0 ? -1 : 1;
+      const newVal = Math.max(min, Math.min(max, value + delta));
+      if (newVal !== value) onChange(newVal);
+    };
+
+    const el = containerRef.current;
+    if (el) {
+      el.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    return () => {
+      if (el) el.removeEventListener('wheel', handleWheel);
+    };
+  }, [value, min, max, onChange]);
 
   useEffect(() => {
     if (isDragging) {
@@ -476,10 +487,10 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 
   return (
     <div 
+      ref={containerRef}
       className="flex items-center justify-center p-3 border-2 border-[#D4A017]/30 bg-[#D4A017]/5 rounded-lg cursor-ns-resize hover:border-[#D4A017] transition-colors relative touch-none select-none"
       onMouseDown={handlePointerDown}
       onTouchStart={handlePointerDown}
-      onWheel={handleWheel}
       title="Scroll or Drag up/down to change"
     >
       <div className="absolute inset-y-0 left-0 flex flex-col items-center justify-center pl-3 text-[#D4A017]/40 text-[10px] space-y-3 pointer-events-none">
