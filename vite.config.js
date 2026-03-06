@@ -5,7 +5,36 @@ import react from '@vitejs/plugin-react'
 const mockApiPlugin = () => ({
   name: 'mock-api',
   configureServer(server) {
-    server.middlewares.use('/api/keys', (req, res) => {
+    let mockLeaderboard = [];
+    
+    server.middlewares.use('/api/leaderboard', (req, res, next) => {
+      if (req.url !== '/' && req.url !== '') return next();
+      if (req.method === 'GET') {
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify(mockLeaderboard));
+      } else if (req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+          try {
+            const entry = JSON.parse(body || '{}');
+            if (entry.ticker) {
+              mockLeaderboard = mockLeaderboard.filter(i => i.ticker !== entry.ticker);
+              mockLeaderboard.push(entry);
+              mockLeaderboard.sort((a,b) => b.score - a.score);
+            }
+            res.setHeader('Content-Type', 'application/json');
+            return res.end(JSON.stringify(mockLeaderboard));
+          } catch(e) {
+            res.statusCode = 500;
+            return res.end(JSON.stringify({ error: "Server error" }));
+          }
+        });
+      }
+    });
+
+    server.middlewares.use('/api/keys', (req, res, next) => {
+      if (req.url !== '/' && req.url !== '') return next();
       let body = '';
       req.on('data', chunk => { body += chunk.toString(); });
       req.on('end', () => {

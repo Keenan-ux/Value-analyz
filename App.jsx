@@ -424,7 +424,7 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
   </header>
 );
 
-const WelcomeScreen = ({ setMode }) => (
+const WelcomeScreen = ({ setMode, username, setUsername }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
       <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
@@ -445,7 +445,20 @@ const WelcomeScreen = ({ setMode }) => (
       ))}
     </div>
     
-    <div className="mt-12 bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-left shadow-lg">
+    <div className="mt-8 flex items-center justify-between p-4 px-6 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
+      <div className="flex items-center gap-4">
+        <span className="text-3xl">👤</span>
+        <div>
+          <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Analyst Profile</label>
+          <input type="text" value={username} onChange={e => setUsername(e.target.value)} maxLength={20} className="bg-transparent border-b border-brand-border focus:border-[#D4A017] text-slate-200 text-sm font-semibold outline-none py-1 w-40 placeholder-slate-600 transition-colors" placeholder="Anonymous User" />
+        </div>
+      </div>
+      <div className="text-[10px] text-slate-500 font-mono text-right max-w-[150px]">
+        Scores are posted to the Global Leaderboard
+      </div>
+    </div>
+
+    <div className="mt-6 bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-left shadow-lg">
       <h3 className="text-[#D4A017] font-mono uppercase tracking-widest text-sm mb-3">FAQ: Sourcing & Accuracy</h3>
       <p className="text-slate-300 text-[13px] leading-relaxed mb-4">
         <strong>What is the Chicago Booth Protocol?</strong><br/>
@@ -458,20 +471,19 @@ const WelcomeScreen = ({ setMode }) => (
       </p>
     </div>
 
-    <div className="mt-6 p-4 px-5 bg-[#D4A017]/10 border border-[#D4A017]/20 rounded-md text-xs text-slate-400 leading-relaxed text-center">
+    <div className="mt-4 p-4 px-5 bg-[#D4A017]/10 border border-[#D4A017]/20 rounded-md text-xs text-slate-400 leading-relaxed text-center">
       <strong className="text-[#D4A017]">Disclaimer:</strong> Educational and research purposes only. Not financial advice.
     </div>
   </div>
 );
 
-const LeaderboardDisplay = ({ data, onSelect, onClear }) => (
+const LeaderboardDisplay = ({ data, onSelect }) => (
   <div className="print:hidden animate-[fadeIn_0.6s_ease] mt-12 mb-8">
     <div className="flex justify-between items-end mb-4 px-1">
-      <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-200 m-0"><span>🏆</span> Value Leaderboard</h3>
-      {data.length > 0 && <button onClick={onClear} className="bg-transparent border-none cursor-pointer text-[10px] uppercase tracking-wider font-mono text-slate-500 hover:text-red-400 transition-colors">Clear History</button>}
+      <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-200 m-0"><span>🌎</span> Global Leaderboard</h3>
     </div>
-    <div className="bg-[#111827] border border-[#1E293B] rounded-lg overflow-hidden">
-      <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 border-b border-[#1E293B] text-[10px] font-mono text-slate-400 uppercase tracking-widest bg-slate-900/50 hidden sm:grid">
+    <div className="bg-[#111827] border border-[#1E293B] rounded-lg overflow-hidden shadow-lg shadow-black/50">
+      <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 border-b border-[#1E293B] text-[10px] font-mono text-slate-400 uppercase tracking-widest bg-slate-900/80 hidden sm:grid">
         <div className="w-6 text-center">#</div>
         <div>Asset</div>
         <div className="text-right w-20">Score</div>
@@ -480,18 +492,24 @@ const LeaderboardDisplay = ({ data, onSelect, onClear }) => (
       </div>
       <div className="divide-y divide-[#1E293B]">
         {data.map((item, idx) => (
-          <div key={item.ticker} onClick={() => onSelect(item)} className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 items-center hover:bg-slate-800/50 cursor-pointer transition-colors group">
+          <div key={`${item.ticker}-${item.score}`} onClick={() => onSelect(item)} className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 items-center hover:bg-slate-800/80 cursor-pointer transition-colors group">
             <div className={`w-6 text-center font-mono text-sm font-bold ${idx < 3 ? 'text-[#D4A017]' : 'text-slate-500 group-hover:text-slate-300'}`}>{idx + 1}</div>
             <div className="min-w-0">
-              <div className="font-mono font-bold text-slate-200 truncate">{item.ticker}</div>
-              <div className="text-[11px] text-slate-500 truncate">{item.company}</div>
+              <div className="font-mono font-bold text-slate-200 truncate flex items-center gap-2">
+                {item.ticker}
+                {idx === 0 && <span className="text-[10px] bg-[#D4A017]/20 text-[#D4A017] px-1.5 py-0.5 rounded leading-none shrink-0 border border-[#D4A017]/30">#1</span>}
+              </div>
+              <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                {item.company}
+                {item.username && <span className="text-[#D4A017]/60 ml-2 font-mono tracking-tight group-hover:text-[#D4A017] transition-colors border-l border-[#1E293B] pl-2">• 👤 {item.username}</span>}
+              </div>
             </div>
             <div className="text-right w-20 font-mono text-[#D4A017] font-bold text-base">{item.score}<span className="text-[10px] text-slate-600">/90</span></div>
             <div className="hidden sm:block text-center w-28 scale-[0.8] origin-center"><Badge v={item.verdict} /></div>
             <div className="hidden sm:block text-right w-20 font-mono text-sm text-slate-300">{item.price}</div>
           </div>
         ))}
-        {data.length === 0 && <div className="p-8 text-center text-sm text-slate-500 font-mono">No analyses saved yet. Run a scan to populate the leaderboard!</div>}
+        {data.length === 0 && <div className="p-8 text-center text-sm text-slate-500 font-mono">No analyses saved yet. Run a scan to populate the global leaderboard!</div>}
       </div>
     </div>
   </div>
@@ -835,15 +853,22 @@ export default function App() {
   const [pinError, setPinError] = useState("");
   const [sessionFiles, setSessionFiles] = useState([]);
   
+  const [username, setUsername] = useState(() => {
+    try { return localStorage.getItem("value_analyst_username") || ""; }
+    catch (e) { return ""; }
+  });
+  
   const [watchlist, setWatchlist] = useState(() => {
     try { return JSON.parse(localStorage.getItem("value_analyst_watchlist")) || []; }
     catch (e) { return []; }
   });
 
-  const [leaderboard, setLeaderboard] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("value_analyst_leaderboard")) || []; }
-    catch (e) { return []; }
-  });
+  const [leaderboard, setLeaderboard] = useState([]);
+  useEffect(() => {
+    fetch('/api/leaderboard').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setLeaderboard(data);
+    }).catch(e => console.log("Global leaderboard not connected locally."));
+  }, []);
 
   const [useFinnhub, setUseFinnhub] = useState(() => {
     try { return JSON.parse(localStorage.getItem("value_analyst_use_finnhub")) ?? true; }
@@ -859,7 +884,7 @@ export default function App() {
   const inputRef = useRef(null);
 
   useEffect(() => { localStorage.setItem("value_analyst_watchlist", JSON.stringify(watchlist)); }, [watchlist]);
-  useEffect(() => { localStorage.setItem("value_analyst_leaderboard", JSON.stringify(leaderboard)); }, [leaderboard]);
+  useEffect(() => { localStorage.setItem("value_analyst_username", username); }, [username]);
   useEffect(() => { localStorage.setItem("value_analyst_use_finnhub", JSON.stringify(useFinnhub)); }, [useFinnhub]);
   useEffect(() => { localStorage.setItem("value_analyst_scan_history", JSON.stringify(scanHistory)); }, [scanHistory]);
   useEffect(() => { if (mode && (mode === "analyze" || mode === "earnings") && inputRef.current) inputRef.current.focus(); }, [mode]);
@@ -1094,20 +1119,32 @@ export default function App() {
           
           if (tot > 0) {
             const h = parseKV(finalParsed.HEADER);
+            const newEntry = {
+              ticker: finalTickerUsed,
+              company: finalLq?.company || h.COMPANY || finalTickerUsed,
+              score: tot,
+              verdict: finalParsed.VERDICT,
+              price: finalLq ? `$${finalLq.price.toFixed(2)}` : h.CURRENT_PRICE,
+              timestamp: Date.now(),
+              rawResult: finalRaw,
+              lq: finalLq,
+              username: username || "Anonymous User"
+            };
+            
+            // Optimistic update locally
             setLeaderboard(prev => {
-              const newEntry = {
-                ticker: finalTickerUsed,
-                company: finalLq?.company || h.COMPANY || finalTickerUsed,
-                score: tot,
-                verdict: finalParsed.VERDICT,
-                price: finalLq ? `$${finalLq.price.toFixed(2)}` : h.CURRENT_PRICE,
-                timestamp: Date.now(),
-                rawResult: finalRaw,
-                lq: finalLq
-              };
               const filtered = prev.filter(item => item.ticker !== finalTickerUsed);
               return [...filtered, newEntry].sort((a, b) => b.score - a.score).slice(0, 100); 
             });
+
+            // Post to Vercel KV global leaderboard
+            fetch('/api/leaderboard', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newEntry)
+            }).then(r => r.json()).then(data => {
+              if (Array.isArray(data)) setLeaderboard(data);
+            }).catch(e => console.log("Live upload failed - KV not setup yet"));
           }
         }
       } else if (!isTargeted && !streamText) {
@@ -1159,8 +1196,8 @@ export default function App() {
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
           <>
-            <WelcomeScreen setMode={setMode} />
-            <LeaderboardDisplay data={leaderboard} onSelect={handleHistorySelect} onClear={() => setLeaderboard([])} />
+            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} />
+            <LeaderboardDisplay data={leaderboard} onSelect={handleHistorySelect} />
             {watchlist.length > 0 && <WatchlistGrid watchlist={watchlist} onSelect={handleHistorySelect} />}
           </>
         )}
