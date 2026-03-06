@@ -71,6 +71,9 @@ Check against value trap indicators. Which red flags present vs clear.
 Direction: [Increase / Decrease / Flat]
 Rationale: 2-3 sentences predicting the direction of future earnings based on your analysis above.
 
+===SOURCES===
+List 3-5 specific URLs or Document Names that you sourced qualitative data from. Use bullet points. Ensure they are real sources.
+
 ===SCORES===
 EARNINGS_QUALITY: 1-10
 BALANCE_SHEET: 1-10
@@ -135,10 +138,22 @@ const fetchWithRetry = async (url, options, retries = 5) => {
   }
 };
 
-const callGemini = async (promptText, sysPrompt, apiKey) => {
+const callGemini = async (promptText, sysPrompt, apiKey, files = []) => {
+  const parts = [{ text: promptText }];
+  
+  // Add base64 pdf files if any exist
+  files.forEach(f => {
+    parts.push({
+      inlineData: {
+        mimeType: f.type,
+        data: f.base64
+      }
+    });
+  });
+
   const payload = {
     systemInstruction: { parts: [{ text: sysPrompt }] },
-    contents: [{ parts: [{ text: promptText }] }],
+    contents: [{ parts }],
     tools: [{ "google_search": {} }]
   };
 
@@ -416,7 +431,21 @@ const WelcomeScreen = ({ setMode }) => (
         </button>
       ))}
     </div>
-    <div className="mt-8 p-4 px-5 bg-[#D4A017]/10 border border-[#D4A017]/20 rounded-md text-xs text-slate-400 leading-relaxed text-center">
+    
+    <div className="mt-12 bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-left shadow-lg">
+      <h3 className="text-[#D4A017] font-mono uppercase tracking-widest text-sm mb-3">FAQ: Sourcing & Accuracy</h3>
+      <p className="text-slate-300 text-[13px] leading-relaxed mb-4">
+        <strong>What is the Chicago Booth Protocol?</strong><br/>
+        This system follows the methodology outlined in the University of Chicago paper <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4835311" target="_blank" rel="noreferrer" className="text-green-500 hover:underline">Financial Statement Analysis with Large Language Models</a> (Kim, Muhn & Nikolaev, 2024). It performs Chain-of-Thought reasoning to disaggregate ROE (DuPont analysis), evaluate growth constraints, and predict earnings direction.
+      </p>
+      <p className="text-slate-300 text-[13px] leading-relaxed">
+        <strong>How accurate is the web search sourcing?</strong><br/>
+        The AI is excellent at fetching recent data via its autonomous Google Search capability. However, it can occasionally extract the wrong margin percentage or pull from a generic news summary instead of the raw 10-Q SEC filing. <br/><br/>
+        <strong>Solution:</strong> The <em>Targeted Analysis</em> mode includes a <strong>Manual Document Upload</strong> feature. Dragging an exact PDF (like a 10-K or Earnings Transcript) forces the AI to execute its analytical engine against your verified filings, completely eliminating the risk of search errors.
+      </p>
+    </div>
+
+    <div className="mt-6 p-4 px-5 bg-[#D4A017]/10 border border-[#D4A017]/20 rounded-md text-xs text-slate-400 leading-relaxed text-center">
       <strong className="text-[#D4A017]">Disclaimer:</strong> Educational and research purposes only. Not financial advice.
     </div>
   </div>
@@ -476,10 +505,35 @@ const WatchlistGrid = ({ watchlist, onSelect }) => (
   </div>
 );
 
-const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, marketCapFilter, setMarketCapFilter }) => {
+const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, marketCapFilter, setMarketCapFilter, files, setFiles }) => {
   const activeMode = MODES.find(m => m.id === mode);
   const isTargeted = mode === "analyze" || mode === "earnings";
   const isValid = !isTargeted || ticker.trim().length > 0;
+  
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files).filter(f => f.type === "application/pdf" || f.type.startsWith("text/"));
+    processFiles(droppedFiles);
+  };
+  
+  const handleFileChange = (e) => {
+    if (e.target.files) processFiles(Array.from(e.target.files));
+  };
+  
+  const processFiles = (newFiles) => {
+    newFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result.split(',')[1];
+        setFiles(prev => [...prev, { name: file.name, type: file.type, size: file.size, base64 }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeFile = (idx) => {
+    setFiles(prev => prev.filter((_, i) => i !== idx));
+  };
 
   return (
     <div className="animate-[fadeIn_0.4s_ease]">
@@ -492,13 +546,50 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
         </div>
         
         {isTargeted ? (
-          <div className="mb-6">
-            <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-2">Ticker Symbol</label>
-            <input ref={inputRef} type="text" value={ticker} onChange={e => setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g, ""))} onKeyDown={e => { if (e.key === "Enter" && isValid) onRun(); }} placeholder="e.g. AAPL, INTC, MU" maxLength={6} className="w-full p-4 px-5 text-xl font-mono font-semibold bg-brand-dark/50 border border-brand-border focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl text-brand-gold outline-none tracking-widest transition-all shadow-inner" />
-            <div className="mt-2 text-[11px] text-green-500 font-mono">● Real-time Finnhub quote will anchor the analysis</div>
-          </div>
+          <>
+            <div className="mb-6 relative z-10">
+              <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-2">Ticker Symbol</label>
+              <input ref={inputRef} type="text" value={ticker} onChange={e => setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g, ""))} onKeyDown={e => { if (e.key === "Enter" && isValid) onRun(); }} placeholder="e.g. AAPL, INTC, MU" maxLength={6} className="w-full p-4 px-5 text-xl font-mono font-semibold bg-brand-dark/50 border border-brand-border focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl text-brand-gold outline-none tracking-widest transition-all shadow-inner" />
+              <div className="mt-2 text-[11px] text-green-500 font-mono">● Real-time Finnhub quote will anchor the analysis</div>
+            </div>
+            
+            <div className="mb-8 relative z-10">
+              <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-2 flex justify-between">
+                <span>Provide Documents (Optional)</span>
+                <span className="text-[#D4A017] lowercase">SEC filings or Earnings</span>
+              </label>
+              <div 
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
+                onDragLeave={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
+                onDrop={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); handleDrop(e); }}
+                className="border-2 border-dashed border-[#1E293B] rounded-xl p-6 text-center transition-colors relative hover:border-slate-500"
+              >
+                <input type="file" multiple accept="application/pdf,text/plain,text/csv" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                <div className="text-3xl mb-2 opacity-50">📄</div>
+                <div className="text-sm text-slate-300 font-medium mb-1">Drag & Drop PDFs here</div>
+                <div className="text-xs text-slate-500">or click to browse from your computer</div>
+              </div>
+              
+              {files.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {files.map((f, i) => (
+                    <div key={i} className="flex justify-between items-center p-3 pr-4 bg-[#111827] border border-[#1E293B] rounded-lg">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <span className="text-xl">📋</span>
+                        <div className="truncate">
+                          <div className="text-sm font-mono text-slate-200 truncate">{f.name}</div>
+                          <div className="text-[10px] text-slate-500 uppercase tracking-widest">{(f.size/1024/1024).toFixed(2)} MB</div>
+                        </div>
+                      </div>
+                      <button onClick={() => removeFile(i)} className="bg-transparent border-none text-slate-500 hover:text-red-500 cursor-pointer text-lg p-1 transition-colors">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         ) : (
-          <div className="mb-6">
+          <div className="mb-6 relative z-10">
             <p className="text-slate-400 text-sm leading-relaxed mb-5">
               {mode === "scan" && "The system will autonomously search and review tickers attempting to find a strong buy candidate. It won't always find one in the time allotted, so feel free to try again!"}
               {mode === "adr" && "Scanning for an international ADR at significant discounts to peers or historical multiples."}
@@ -519,7 +610,7 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
           </div>
         )}
         
-        <button onClick={isValid ? () => onRun() : undefined} disabled={!isValid} className={`w-full py-4 px-6 text-[15px] font-semibold rounded-xl border-none tracking-wide transition-all duration-300 shadow-lg ${isValid ? "bg-gradient-to-r from-brand-gold to-[#B8860B] text-brand-dark cursor-pointer hover:opacity-90 hover:shadow-brand-gold/20 hover:-translate-y-0.5" : "bg-slate-800 text-slate-500 cursor-not-allowed"}`}>
+        <button onClick={isValid ? () => onRun() : undefined} disabled={!isValid} className={`w-full py-4 px-6 text-[15px] font-semibold rounded-xl border-none tracking-wide transition-all duration-300 shadow-lg relative z-10 ${isValid ? "bg-gradient-to-r from-brand-gold to-[#B8860B] text-brand-dark cursor-pointer hover:opacity-90 hover:shadow-brand-gold/20 hover:-translate-y-0.5" : "bg-slate-800 text-slate-500 cursor-not-allowed"}`}>
           Run Analysis
         </button>
       </div>
@@ -527,7 +618,7 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
   );
 };
 
-const LoadingState = ({ message }) => (
+const LoadingState = ({ message, isAutonomous }) => (
   <div className="animate-[fadeIn_0.4s_ease] text-center pt-20">
     <div className="relative w-16 h-16 mx-auto mb-7">
       <div className="absolute inset-0 border-2 border-[#1E293B] border-t-[#D4A017] rounded-full animate-[spin_1s_linear_infinite]" />
@@ -536,7 +627,11 @@ const LoadingState = ({ message }) => (
     <div className="font-mono text-[13px] text-slate-400 whitespace-pre-line leading-loose text-left max-w-xl mx-auto">
       <span className="inline-block w-2 h-2 rounded-full bg-[#D4A017] mr-2.5 animate-[pulse_1.5s_ease-in-out_infinite]" />{message}
     </div>
-    <div className="mt-6 text-xs text-slate-500">This may take 30-60 seconds...</div>
+    <div className="mt-6 text-xs text-slate-500">
+      {isAutonomous 
+        ? "Autonomous scanning reviews multiple candidates to find a true value play. This may take 1-3 minutes..." 
+        : "Extracting Finnhub data & generating fundamental analysis... This may take 30-60 seconds."}
+    </div>
   </div>
 );
 
@@ -686,6 +781,12 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
       {parsed.VALUE_TRAP_CHECK && <Section title="Value Trap Check" icon="🪤">{parsed.VALUE_TRAP_CHECK}</Section>}
       {parsed.MONITORING && <Section title="Monitoring Triggers" icon="👁️">{parsed.MONITORING}</Section>}
       {parsed.POSITION_SIZING && <Section title="Position Sizing" icon="📐">{parsed.POSITION_SIZING}</Section>}
+      {parsed.SOURCES && (
+        <div className="glass-panel p-6 mb-5 rounded-2xl print:break-inside-avoid bg-slate-900/40">
+          <div className="flex items-center gap-2.5 mb-3.5"><span className="text-base">🔗</span><h3 className="m-0 text-[13px] font-mono text-slate-400 uppercase tracking-widest font-semibold">Sources Used</h3></div>
+          <div className="text-[13px] leading-relaxed text-slate-300 font-mono whitespace-pre-wrap">{parsed.SOURCES}</div>
+        </div>
+      )}
 
       <details className="print:hidden mt-4 group">
         <summary className="cursor-pointer text-xs font-mono text-slate-500 py-2 hover:text-slate-300 transition-colors">View Raw Output</summary>
@@ -719,6 +820,7 @@ export default function App() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
+  const [sessionFiles, setSessionFiles] = useState([]);
   
   const [watchlist, setWatchlist] = useState(() => {
     try { return JSON.parse(localStorage.getItem("value_analyst_watchlist")) || []; }
@@ -782,6 +884,7 @@ export default function App() {
     setMode(null); setTicker(""); setMarketCapFilter("Any"); setLoading(false); 
     setError(null); setRawResult(""); setParsed(null); setStreamText(""); 
     setStatusMsg(""); setLq(null); setUnlucky(false); setScannedBatch([]); 
+    setSessionFiles([]);
   };
 
   const run = useCallback(async (overrideMode, overrideTicker) => {
@@ -900,13 +1003,19 @@ export default function App() {
         const baseInstr = `Perform a complete fundamental value analysis on ${currentTicker}. Search the web for qualitative data, earnings history, and news. ${useFinnhub ? "YOU MUST USE THE PROVIDED LIVE MARKET DATA FOR ALL PRICING AND QUANTITATIVE METRICS. DO NOT SEARCH THE WEB FOR CURRENT STOCK PRICE." : ""}`;
         
         let analysisPromptText = "";
+        let finalFiles = [];
+        
         if (activeMode === "analyze" || activeMode === "scan" || activeMode === "adr" || activeMode === "sector") {
-            analysisPromptText = `MODE: ${activeMode}\nTICKER: ${currentTicker}\n\n${ldb}\n\n${baseInstr}\n\nOutput in the required structured format. NO PLACEHOLDERS. FILL EVERY FIELD.`;
+            const hasFilesInstr = sessionFiles.length > 0 ? "IMPORTANT OVERRIDE: The user has attached actual raw documents. YOU MUST ATTACH HIGHEST WEIGHT TO THE ATTACHED DOCUMENTS OVER WEB SEARCHES FOR FINANCIALS OR EARNINGS DATA." : "";
+            analysisPromptText = `MODE: ${activeMode}\nTICKER: ${currentTicker}\n\n${ldb}\n\n${baseInstr}\n\n${hasFilesInstr}\n\nOutput in the required structured format. NO PLACEHOLDERS. FILL EVERY FIELD.`;
+            if (isTargeted) finalFiles = sessionFiles;
         } else if (activeMode === "earnings") {
-             analysisPromptText = `MODE: earnings\nTICKER: ${currentTicker}\n\n${ldb}\n\nPerform a post-earnings drift analysis on ${currentTicker}. Search for the most recent earnings results vs consensus, stock reaction, forward guidance, and analyst revisions. Predict the direction of next quarter's earnings. ${useFinnhub ? "YOU MUST USE THE PROVIDED LIVE MARKET DATA." : ""}\n\nOutput in the required structured format. NO PLACEHOLDERS. FILL EVERY FIELD.`;
+             const hasFilesInstr = sessionFiles.length > 0 ? "IMPORTANT OVERRIDE: Documents attached. USE ATTACHED DOCUMENTS EXPLICITLY OVER WEB SEARCH." : "";
+             analysisPromptText = `MODE: earnings\nTICKER: ${currentTicker}\n\n${ldb}\n\nPerform a post-earnings drift analysis on ${currentTicker}. Search for the most recent earnings results vs consensus, stock reaction, forward guidance, and analyst revisions. Predict the direction of next quarter's earnings. ${useFinnhub ? "YOU MUST USE THE PROVIDED LIVE MARKET DATA." : ""}\n\n${hasFilesInstr}\n\nOutput in the required structured format. NO PLACEHOLDERS. FILL EVERY FIELD.`;
+             finalFiles = sessionFiles;
         }
 
-        const txt = await callGemini(analysisPromptText, SYSTEM_PROMPT, activeGeminiKey);
+        const txt = await callGemini(analysisPromptText, SYSTEM_PROMPT, activeGeminiKey, finalFiles);
         const p = parseAnalysis(txt);
         
         if (Object.keys(p).length > 2) {
@@ -1043,7 +1152,7 @@ export default function App() {
           </>
         )}
 
-        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={() => run()} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} />}
+        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={() => run()} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} files={sessionFiles} setFiles={setSessionFiles} />}
         
         {unlucky && !loading && (
           <div className="animate-[fadeIn_0.4s_ease] bg-[#111827] border border-[#1E293B] rounded-xl p-10 text-center mt-6">
@@ -1085,7 +1194,7 @@ export default function App() {
           </div>
         )}
 
-        {loading && <LoadingState message={statusMsg} />}
+        {loading && <LoadingState message={statusMsg} isAutonomous={(mode && mode !== "analyze" && mode !== "earnings")} />}
         {error && (
           <div className="animate-[fadeIn_0.4s_ease] bg-red-500/10 border border-red-500 rounded-lg p-6 mt-6">
             <div className="text-sm text-red-500 font-semibold mb-2">Analysis Error</div>
