@@ -354,7 +354,7 @@ const FairValueVisualizer = ({ current, fv, quote }) => {
 };
 
 // ─── MAIN LAYOUT COMPONENTS ───
-const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey, setFinnhubKey, hasData, onReset }) => (
+const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey, setFinnhubKey, hasData, onReset, onUnlockClick }) => (
   <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-7 py-3.5 flex items-center justify-between shadow-sm">
     <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-gold to-[#B8860B] flex items-center justify-center text-base font-bold text-brand-dark font-mono shadow-[0_0_15px_rgba(212,160,23,0.4)]">V</div>
@@ -372,15 +372,19 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
         </button>
         <span className={`text-xs font-mono w-28 ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Finnhub API" : "Web search mode"}</span>
       </div>
-      
-      <div className="flex flex-col gap-1">
+
+      <button onClick={onUnlockClick} className="mr-2 px-3 py-1.5 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-xs font-mono transition-colors flex items-center gap-1.5" title="Unlock saved keys via PIN">
+        <span>🔐</span> <span className="hidden sm:inline">Auto-fill</span>
+      </button>
+
+      <div className="flex flex-col gap-1 hidden md:flex">
         <label className="text-[9px] text-slate-400 font-mono uppercase">Gemini API Key</label>
-        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Paste Gemini Key..." className="w-36 px-3 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Paste Gemini Key..." className="w-28 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
       </div>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 hidden md:flex">
         <label className="text-[9px] text-slate-400 font-mono uppercase">Finnhub API Key</label>
-        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Paste Finnhub Key..." className="w-36 px-3 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Paste Finnhub Key..." className="w-28 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
       </div>
 
       {hasData && (
@@ -712,6 +716,9 @@ export default function App() {
   const [lq, setLq] = useState(null);
   const [unlucky, setUnlucky] = useState(false);
   const [scannedBatch, setScannedBatch] = useState([]);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
   
   const [watchlist, setWatchlist] = useState(() => {
     try { return JSON.parse(localStorage.getItem("value_analyst_watchlist")) || []; }
@@ -741,6 +748,35 @@ export default function App() {
   useEffect(() => { localStorage.setItem("value_analyst_use_finnhub", JSON.stringify(useFinnhub)); }, [useFinnhub]);
   useEffect(() => { localStorage.setItem("value_analyst_scan_history", JSON.stringify(scanHistory)); }, [scanHistory]);
   useEffect(() => { if (mode && (mode === "analyze" || mode === "earnings") && inputRef.current) inputRef.current.focus(); }, [mode]);
+
+  const fetchKeysWithPin = useCallback(async (pin, isManualSubmit = false) => {
+    try {
+      if (isManualSubmit) setPinError("");
+      const res = await fetch("/api/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        if (data.geminiKey) setGeminiKey(data.geminiKey);
+        if (data.finnhubKey) setFinnhubKey(data.finnhubKey);
+        localStorage.setItem("value_analyst_pin", pin);
+        if (isManualSubmit) setShowPinModal(false);
+      } else {
+        if (isManualSubmit) setPinError(data.error || "Invalid PIN");
+        else localStorage.removeItem("value_analyst_pin");
+      }
+    } catch (e) {
+      if (isManualSubmit) setPinError("Error connecting to server.");
+    }
+  }, []);
+
+  useEffect(() => {
+    const savedPin = localStorage.getItem("value_analyst_pin");
+    if (savedPin) fetchKeysWithPin(savedPin);
+  }, [fetchKeysWithPin]);
 
   const reset = () => { 
     setMode(null); setTicker(""); setMarketCapFilter("Any"); setLoading(false); 
@@ -980,7 +1016,23 @@ export default function App() {
         @media print { body { background: #0A0E17 !important; color: #E2E8F0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }
       `}</style>
 
-      <TopNav useFinnhub={useFinnhub} setUseFinnhub={setUseFinnhub} geminiKey={geminiKey} setGeminiKey={setGeminiKey} finnhubKey={finnhubKey} setFinnhubKey={setFinnhubKey} hasData={parsed || streamText || loading || error || unlucky} onReset={reset} />
+      {showPinModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="glass-panel p-8 rounded-2xl max-w-sm w-full outline outline-1 outline-[#1E293B] shadow-2xl relative text-center bg-[#0A0E17]">
+            <button onClick={() => setShowPinModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 bg-transparent border-none cursor-pointer text-xl">✕</button>
+            <div className="text-4xl mb-4">🔐</div>
+            <h3 className="text-xl font-semibold text-slate-200 m-0 mb-2">Unlock API Keys</h3>
+            <p className="text-sm text-slate-400 m-0 mb-6">Enter your PIN to auto-fill keys from Vercel.</p>
+            <form onSubmit={(e) => { e.preventDefault(); fetchKeysWithPin(pinInput, true); }}>
+              <input type="password" autoFocus value={pinInput} onChange={(e) => { setPinInput(e.target.value); setPinError(""); }} placeholder="Enter PIN..." className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#D4A017] text-slate-200 px-4 py-3 rounded-xl mb-4 text-center text-lg tracking-[0.5em] font-mono outline-none" />
+              {pinError && <div className="text-red-500 text-xs font-mono text-center mb-4">{pinError}</div>}
+              <button type="submit" className="w-full bg-gradient-to-r from-[#D4A017] to-[#B8860B] text-[#0A0E17] font-semibold py-3 rounded-xl cursor-pointer hover:opacity-90 transition-opacity">Unlock</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <TopNav useFinnhub={useFinnhub} setUseFinnhub={setUseFinnhub} geminiKey={geminiKey} setGeminiKey={setGeminiKey} finnhubKey={finnhubKey} setFinnhubKey={setFinnhubKey} hasData={parsed || streamText || loading || error || unlucky} onReset={reset} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />
 
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
