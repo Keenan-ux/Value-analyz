@@ -1,56 +1,65 @@
-import { createClient } from '@vercel/kv';
-
 export const config = {
   runtime: 'edge',
 };
 
-const getStore = () => {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) throw new Error("KV Database not configured");
-  return createClient({ url, token });
+const upstashCommand = async (url, token, commandArgs) => {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(commandArgs)
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.result; // For GET returns string, for SET returns "OK"
 };
 
-export default async function handler(req, res) {
-  if (req.method === 'GET') {
-    try {
-      const db = getStore();
-      const leaderboard = (await db.get('global_leaderboard')) || [];
-      return res.status(200).json(leaderboard);
-    } catch (error) {
-       // if Vercel KV isn't configured properly yet, return empty array to prevent crashing
-      return res.status(200).json([]);
-    }
+export default async function handler(req) {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    return new Response(JSON.stringify({ error: 'KV Database missing keys' }), { status: 500 });
   }
 
-  if (req.method === 'POST') {
-    try {
-      const entry = req.body;
-      
+  try {
+    if (req.method === 'GET') {
+      const rawRes = await upstashCommand(url, token, ['GET', 'global_leaderboard']);
+      const leaderboard = rawRes ? JSON.parse(rawRes) : [];
+      return new Response(JSON.stringify(leaderboard), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (req.method === 'POST') {
+      const entry = await req.json();
+
       if (!entry.ticker || !entry.score) {
-        return res.status(400).json({ error: 'Missing required fields' });
+        return new Response(JSON.stringify({ error: 'Missing req fields' }), { status: 400 });
       }
 
-      const db = getStore();
-      let leaderboard = (await db.get('global_leaderboard')) || [];
-      
-      // Remove any existing entry for this exact ticker (only keep the highest/latest representation)
+      const rawRes = await upstashCommand(url, token, ['GET', 'global_leaderboard']);
+      let leaderboard = rawRes ? JSON.parse(rawRes) : [];
+
       leaderboard = leaderboard.filter(item => item.ticker !== entry.ticker);
-      
       leaderboard.push(entry);
-      
-      // Sort descending by score and keep top 25
       leaderboard.sort((a, b) => b.score - a.score);
       leaderboard = leaderboard.slice(0, 25);
 
-      await db.set('global_leaderboard', leaderboard);
-      
-      return res.status(200).json(leaderboard);
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Failed to update leaderboard. KV may not be configured.' });
-    }
-  }
+      await upstashCommand(url, token, ['SET', 'global_leaderboard', JSON.stringify(leaderboard)]);
 
-  return res.status(405).json({ error: 'Method not allowed' });
+      return new Response(JSON.stringify(leaderboard), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
 }
