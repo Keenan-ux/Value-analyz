@@ -10,7 +10,7 @@ const MODES = [
   { id: "analyze", label: "Analyze Ticker", desc: "Deep dive on a specific stock", icon: "📊" },
   { id: "earnings", label: "Earnings Analysis", desc: "Post-earnings drift analysis", icon: "📈" },
   { id: "adr", label: "ADR Scanner", desc: "International value opportunities", icon: "🌍" },
-  { id: "sector", label: "Sector Rotation", desc: "Best stock in worst sector", icon: "🔄" },
+  { id: "sector", label: "Contrarian Deep Value", desc: "Find strong companies in hated sectors", icon: "💣" },
 ];
 
 const TICKER_POOLS = {
@@ -1028,7 +1028,7 @@ export default function App() {
           const discoveryPrompts = {
             scan: `Pick ONE specific, real undervalued U.S. stock.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
             adr: `Pick ONE specific international ADR available on US exchanges.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
-            sector: `Identify an out-of-favor sector, then pick a high-quality company within it.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`
+            sector: `Identify an out-of-favor, beaten-down, or actively hated sector, then pick a fundamentally sound company within it from the provided list.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`
           };
           
           const discRes = await callGemini(discoveryPrompts[activeMode], "You are a ticker discovery tool. You must ONLY output the ticker wrapped in <TICKER> tags.", activeGeminiKey);
