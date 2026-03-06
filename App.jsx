@@ -261,13 +261,13 @@ const renderLinks = (text) => {
 
 // ─── UI COMPONENTS ───
 const Badge = ({ v }) => {
-  const x = (v || "").toLowerCase();
+  const x = (v || "").trim().toLowerCase();
   let colors = "bg-brand-gold/15 text-brand-gold border-brand-gold";
-  if (x.includes("strong buy")) colors = "bg-green-500/15 text-green-500 border-green-500";
-  else if (x.includes("buy")) colors = "bg-green-400/10 text-green-400 border-green-400";
-  else if (x.includes("hold")) colors = "bg-amber-500/10 text-amber-500 border-amber-500";
-  else if (x.includes("strong avoid")) colors = "bg-red-500/15 text-red-500 border-red-500";
-  else if (x.includes("avoid")) colors = "bg-red-400/10 text-red-400 border-red-400";
+  if (x === "strong buy") colors = "bg-green-500/15 text-green-500 border-green-500";
+  else if (x === "buy") colors = "bg-green-400/10 text-green-400 border-green-400";
+  else if (x === "hold") colors = "bg-amber-500/10 text-amber-500 border-amber-500";
+  else if (x === "avoid") colors = "bg-red-400/10 text-red-400 border-red-400";
+  else if (x === "strong avoid") colors = "bg-red-500/15 text-red-500 border-red-500";
   
   return <span className={`inline-block px-4 py-1.5 rounded border font-mono text-sm font-bold tracking-wide uppercase ${colors}`}>{v}</span>;
 };
@@ -741,22 +741,25 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
   );
 };
 
-const LoadingState = ({ message, isAutonomous }) => (
-  <div className="animate-[fadeIn_0.4s_ease] text-center pt-20">
-    <div className="relative w-16 h-16 mx-auto mb-7">
-      <div className="absolute inset-0 border-2 border-[#1E293B] border-t-[#D4A017] rounded-full animate-[spin_1s_linear_infinite]" />
-      <div className="absolute inset-2 border-2 border-[#1E293B] border-b-amber-500 rounded-full animate-[spin_1.5s_linear_infinite_reverse]" />
+const LoadingState = ({ message, isAutonomous, scanLength = 1 }) => {
+  const maxMins = Math.max(1, Math.ceil(scanLength * 1.5));
+  return (
+    <div className="animate-[fadeIn_0.4s_ease] text-center pt-20">
+      <div className="relative w-16 h-16 mx-auto mb-7">
+        <div className="absolute inset-0 border-2 border-[#1E293B] border-t-[#D4A017] rounded-full animate-[spin_1s_linear_infinite]" />
+        <div className="absolute inset-2 border-2 border-[#1E293B] border-b-amber-500 rounded-full animate-[spin_1.5s_linear_infinite_reverse]" />
+      </div>
+      <div className="font-mono text-[13px] text-slate-400 whitespace-pre-line leading-loose text-center max-w-xl mx-auto">
+        <span className="inline-block w-2 h-2 rounded-full bg-[#D4A017] mr-2.5 animate-[pulse_1.5s_ease-in-out_infinite]" />{message}
+      </div>
+      <div className="mt-6 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+        {isAutonomous 
+          ? `Autonomous scanning reviews multiple candidates to find a true value play. Based on a queue of ${scanLength}, this deep search may take up to ${maxMins} minutes...` 
+          : "Extracting Finnhub data & generating fundamental analysis... This may take 30-60 seconds."}
+      </div>
     </div>
-    <div className="font-mono text-[13px] text-slate-400 whitespace-pre-line leading-loose text-center max-w-xl mx-auto">
-      <span className="inline-block w-2 h-2 rounded-full bg-[#D4A017] mr-2.5 animate-[pulse_1.5s_ease-in-out_infinite]" />{message}
-    </div>
-    <div className="mt-6 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-      {isAutonomous 
-        ? "Autonomous scanning reviews multiple candidates to find a true value play. This may take 1-3 minutes..." 
-        : "Extracting Finnhub data & generating fundamental analysis... This may take 30-60 seconds."}
-    </div>
-  </div>
-);
+  );
+};
 
 const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggleWatchlist, live, useFinnhub }) => {
   const h = parseKV(parsed.HEADER);
@@ -1348,7 +1351,7 @@ export default function App() {
 
         {loading && (
           <>
-            <LoadingState message={statusMsg} isAutonomous={(mode && mode !== "analyze" && mode !== "earnings")} />
+            <LoadingState message={statusMsg} isAutonomous={(mode && mode !== "analyze" && mode !== "earnings")} scanLength={scanLength} />
             {(mode && mode !== "analyze" && mode !== "earnings") && <LiveScanTable data={liveResults} />}
           </>
         )}
