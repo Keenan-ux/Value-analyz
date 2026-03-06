@@ -1,9 +1,5 @@
-export const config = {
-  runtime: 'edge',
-};
-
 const upstashCommand = async (url, token, commandArgs) => {
-  const res = await fetch(url, {
+  const res = await fetch(url.replace(/\/$/, ''), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -13,36 +9,65 @@ const upstashCommand = async (url, token, commandArgs) => {
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error);
-  return data.result; // For GET returns string, for SET returns "OK"
+  return data.result;
 };
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    return new Response(JSON.stringify({ error: 'KV Database missing keys' }), { status: 500 });
+    return res.status(500).json({ error: 'KV Database missing keys' });
   }
 
   try {
     if (req.method === 'GET') {
       const rawRes = await upstashCommand(url, token, ['GET', 'global_leaderboard']);
       const leaderboard = rawRes ? JSON.parse(rawRes) : [];
-      return new Response(JSON.stringify(leaderboard), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return res.status(200).json(leaderboard);
     }
 
     if (req.method === 'POST') {
-      const entry = await req.json();
+      // Vercel auto-parses req.body for standard API routes
+      let entry = req.body;
+      if (typeof entry === 'string') {
+        try { entry = JSON.parse(entry); } catch(e) {}
+      }
 
-      if (!entry.ticker || !entry.score) {
-        return new Response(JSON.stringify({ error: 'Missing req fields' }), { status: 400 });
+      if (!entry || !entry.ticker || !entry.score) {
+        return res.status(400).json({ error: 'Missing req fields' });
       }
 
       const rawRes = await upstashCommand(url, token, ['GET', 'global_leaderboard']);
       let leaderboard = rawRes ? JSON.parse(rawRes) : [];
+
+      // Find existing entry
+      const existing = leaderboard.find(item => item.ticker === entry.ticker);
+      let recentScores = existing?.recentScores || [];
+      
+      // Add new score and cap at 10
+      recentScores.push(entry.score);
+      if (recentScores.length > 10) recentScores.shift();
+
+      // Calculate median
+      const sorted = [...recentScores].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 !== 0 
+        ? sorted[mid] 
+        : (sorted[mid - 1] + sorted[mid]) / 2;
+      
+      // Update entry with rolling median
+      entry.score = median;
+      entry.recentScores = recentScores;
+
+      // Ensure verdict corresponds to the new median roughly, or just keep latest verdict?
+      // Since verdict is based on score tiers, we recount it to stay accurate to the median text:
+      let medianVerdict = "Strong Avoid";
+      if (median >= 82) medianVerdict = "Strong Buy";
+      else if (median >= 75) medianVerdict = "Buy";
+      else if (median >= 55) medianVerdict = "Hold";
+      else if (median >= 45) medianVerdict = "Avoid";
+      entry.verdict = medianVerdict;
 
       leaderboard = leaderboard.filter(item => item.ticker !== entry.ticker);
       leaderboard.push(entry);
@@ -51,15 +76,12 @@ export default async function handler(req) {
 
       await upstashCommand(url, token, ['SET', 'global_leaderboard', JSON.stringify(leaderboard)]);
 
-      return new Response(JSON.stringify(leaderboard), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return res.status(200).json(leaderboard);
     }
 
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return res.status(500).json({ error: error.message });
   }
 }
