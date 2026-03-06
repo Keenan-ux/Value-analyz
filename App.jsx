@@ -499,6 +499,38 @@ const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLeng
   </div>
 );
 
+const LiveScanTable = ({ data }) => (
+  <div className="print:hidden animate-[fadeIn_0.5s_ease] mt-8 mb-6 bg-[#0A0E17]/80 border border-[#D4A017]/30 rounded-lg overflow-hidden backdrop-blur-sm relative">
+    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4A017]/50 to-transparent animate-[pulse_2s_ease-in-out_infinite]" />
+    <div className="bg-[#D4A017]/10 px-4 py-2 border-b border-[#D4A017]/20 flex items-center gap-2">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4A017] opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4A017]"></span>
+      </span>
+      <span className="text-xs font-mono text-[#D4A017] uppercase tracking-widest font-bold">Live Scan Feed</span>
+    </div>
+    
+    <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+      {data.length === 0 ? (
+        <div className="p-6 text-center text-xs text-slate-500 font-mono italic">Waiting for initial target data...</div>
+      ) : (
+        <div className="divide-y divide-[#1E293B]">
+          {data.map((item, idx) => (
+            <div key={idx} className="grid grid-cols-[auto_1fr_auto_auto] gap-4 p-2 px-4 items-center text-sm font-mono animate-[slideIn_0.3s_ease]">
+              <div className="w-4 text-slate-500 text-[10px] text-right">{idx + 1}.</div>
+              <div className="font-bold text-slate-200">{item.ticker}</div>
+              <div className={`font-bold ${item.score >= 70 ? 'text-[#D4A017]' : (item.score >= 55 ? 'text-slate-300' : 'text-slate-500')}`}>
+                {item.score}<span className="text-[10px] text-slate-600 font-normal">/90</span>
+              </div>
+              <div className="w-24 text-center scale-75 origin-right"><Badge v={item.verdict} /></div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 const LeaderboardDisplay = ({ data, onSelect }) => {
   const [expanded, setExpanded] = useState({});
   
@@ -905,6 +937,7 @@ export default function App() {
   const [lq, setLq] = useState(null);
   const [unlucky, setUnlucky] = useState(false);
   const [scannedBatch, setScannedBatch] = useState([]);
+  const [liveResults, setLiveResults] = useState([]);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
@@ -995,7 +1028,7 @@ export default function App() {
     if (isTargeted && !tk) return;
 
     setLoading(true); setError(null); setRawResult(""); setParsed(null); 
-    setStreamText(""); setLq(null); setUnlucky(false);
+    setStreamText(""); setLq(null); setUnlucky(false); setLiveResults([]);
     
     const activeGeminiKey = geminiKey ? geminiKey.trim() : RUNTIME_API_KEY;
     
@@ -1146,10 +1179,13 @@ export default function App() {
               username: username || "Anonymous User"
             };
             
+            // Add to live visual feed
+            setLiveResults(prev => [...prev, newEntry]);
+            
             // Optimistic update locally
             setLeaderboard(prev => {
               const filtered = prev.filter(item => item.ticker !== currentTicker);
-              return [...filtered, newEntry].sort((a, b) => b.score - a.score).slice(0, 25); 
+              return [...filtered, newEntry].sort((a, b) => b.score - a.score).slice(0, 50); 
             });
 
             // Post to Vercel KV global leaderboard
@@ -1307,7 +1343,12 @@ export default function App() {
           </div>
         )}
 
-        {loading && <LoadingState message={statusMsg} isAutonomous={(mode && mode !== "analyze" && mode !== "earnings")} />}
+        {loading && (
+          <>
+            <LoadingState message={statusMsg} isAutonomous={(mode && mode !== "analyze" && mode !== "earnings")} />
+            {(mode && mode !== "analyze" && mode !== "earnings") && <LiveScanTable data={liveResults} />}
+          </>
+        )}
         {error && (
           <div className="animate-[fadeIn_0.4s_ease] bg-red-500/10 border border-red-500 rounded-lg p-6 mt-6">
             <div className="text-sm text-red-500 font-semibold mb-2">Analysis Error</div>

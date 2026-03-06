@@ -72,7 +72,7 @@ export default async function handler(req, res) {
       leaderboard = leaderboard.filter(item => item.ticker !== entry.ticker);
       leaderboard.push(entry);
       leaderboard.sort((a, b) => b.score - a.score);
-      leaderboard = leaderboard.slice(0, 25);
+      leaderboard = leaderboard.slice(0, 50);
 
       await upstashCommand(url, token, ['SET', 'global_leaderboard', JSON.stringify(leaderboard)]);
 
