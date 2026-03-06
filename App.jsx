@@ -477,43 +477,78 @@ const WelcomeScreen = ({ setMode, username, setUsername }) => (
   </div>
 );
 
-const LeaderboardDisplay = ({ data, onSelect }) => (
-  <div className="print:hidden animate-[fadeIn_0.6s_ease] mt-12 mb-8">
-    <div className="flex justify-between items-end mb-4 px-1">
-      <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-200 m-0"><span>🌎</span> Global Leaderboard</h3>
-    </div>
-    <div className="bg-[#111827] border border-[#1E293B] rounded-lg overflow-hidden shadow-lg shadow-black/50">
-      <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 border-b border-[#1E293B] text-[10px] font-mono text-slate-400 uppercase tracking-widest bg-slate-900/80 hidden sm:grid">
-        <div className="w-6 text-center">#</div>
-        <div>Asset</div>
-        <div className="text-right w-20">Score</div>
-        <div className="text-center w-28">Verdict</div>
-        <div className="text-right w-20">Price</div>
+const LeaderboardDisplay = ({ data, onSelect }) => {
+  const [expanded, setExpanded] = useState({});
+  
+  const toggleExpand = (e, ticker) => {
+    e.stopPropagation();
+    setExpanded(prev => ({ ...prev, [ticker]: !prev[ticker] }));
+  };
+
+  return (
+    <div className="print:hidden animate-[fadeIn_0.6s_ease] mt-12 mb-8">
+      <div className="flex justify-between items-end mb-4 px-1">
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-200 m-0"><span>🌎</span> Global Leaderboard</h3>
+          <p className="text-xs text-[#D4A017]/70 mt-1 font-mono tracking-tight">Scores represent a rolling median of the last 10 community analyses.</p>
+        </div>
       </div>
-      <div className="divide-y divide-[#1E293B]">
-        {data.map((item, idx) => (
-          <div key={`${item.ticker}-${item.score}`} onClick={() => onSelect(item)} className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 items-center hover:bg-slate-800/80 cursor-pointer transition-colors group">
-            <div className={`w-6 text-center font-mono text-sm font-bold ${idx < 3 ? 'text-[#D4A017]' : 'text-slate-500 group-hover:text-slate-300'}`}>{idx + 1}</div>
-            <div className="min-w-0">
-              <div className="font-mono font-bold text-slate-200 truncate flex items-center gap-2">
-                {item.ticker}
-                {idx === 0 && <span className="text-[10px] bg-[#D4A017]/20 text-[#D4A017] px-1.5 py-0.5 rounded leading-none shrink-0 border border-[#D4A017]/30">#1</span>}
+      <div className="bg-[#111827] border border-[#1E293B] rounded-lg overflow-hidden shadow-lg shadow-black/50">
+        <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 border-b border-[#1E293B] text-[10px] font-mono text-slate-400 uppercase tracking-widest bg-slate-900/80 hidden sm:grid">
+          <div className="w-6 text-center">#</div>
+          <div>Asset</div>
+          <div className="text-right w-20">Score</div>
+          <div className="text-center w-28">Verdict</div>
+          <div className="text-right w-20">Price</div>
+        </div>
+        <div className="divide-y divide-[#1E293B]">
+          {data.length === 0 && <div className="p-8 text-center text-sm text-slate-500 font-mono">No analyses saved yet. Run a scan to populate the global leaderboard!</div>}
+          {data.map((item, idx) => (
+            <div key={`${item.ticker}-${item.score}`} className="flex flex-col group transition-colors hover:bg-slate-800/80 cursor-pointer">
+              <div onClick={() => onSelect(item)} className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 items-center">
+                <div className={`w-6 text-center font-mono text-sm font-bold ${idx < 3 ? 'text-[#D4A017]' : 'text-slate-500 group-hover:text-slate-300'}`}>{idx + 1}</div>
+                <div className="min-w-0">
+                  <div className="font-mono font-bold text-slate-200 truncate flex items-center gap-2">
+                    {item.ticker}
+                    {idx === 0 && <span className="text-[10px] bg-[#D4A017]/20 text-[#D4A017] px-1.5 py-0.5 rounded leading-none shrink-0 border border-[#D4A017]/30">#1</span>}
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate mt-0.5 flex flex-wrap items-center gap-2">
+                    <span>{item.company}</span>
+                    {item.username && <span className="text-[#D4A017]/60 font-mono tracking-tight group-hover:text-[#D4A017] transition-colors border-l border-[#1E293B] pl-2">👤 {item.username}</span>}
+                    {item.recentScores?.length > 0 && (
+                      <button onClick={(e) => toggleExpand(e, item.ticker)} className="ml-auto text-[#D4A017]/60 hover:text-[#D4A017] px-2 py-0.5 rounded border border-[#1E293B] bg-slate-900 overflow-hidden shrink-0 flex items-center gap-1 transition-colors z-10">
+                        📊 <span className="text-[9px] uppercase tracking-widest">{expanded[item.ticker] ? 'HIDE HISTORY' : 'VIEW HISTORY'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right w-20 font-mono text-[#D4A017] font-bold text-base">{item.score}<span className="text-[10px] text-slate-600">/90</span></div>
+                <div className="hidden sm:block text-center w-28 scale-[0.8] origin-center"><Badge v={item.verdict} /></div>
+                <div className="hidden sm:block text-right w-20 font-mono text-sm text-slate-300">{item.price}</div>
               </div>
-              <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                {item.company}
-                {item.username && <span className="text-[#D4A017]/60 ml-2 font-mono tracking-tight group-hover:text-[#D4A017] transition-colors border-l border-[#1E293B] pl-2">• 👤 {item.username}</span>}
-              </div>
+              
+              {expanded[item.ticker] && item.recentScores && (
+                <div className="px-5 pb-4 pt-1 border-t border-slate-700/50 bg-[#0A0E17]/50 pointer-events-none cursor-default">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 flex justify-between">
+                    <span>Recent calculation history (n={item.recentScores.length})</span>
+                    <span className="text-[#D4A017]">Running Median: {item.score}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {item.recentScores.map((s, i) => (
+                      <div key={i} className={`px-2 py-1 rounded text-xs font-mono font-bold border ${Math.abs(s - item.score) <= 2 ? 'bg-[#D4A017]/10 text-[#D4A017] border-[#D4A017]/20 pointer-events-auto' : 'bg-slate-800 text-slate-400 border-slate-700 pointer-events-auto'}`}>
+                        {s}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="text-right w-20 font-mono text-[#D4A017] font-bold text-base">{item.score}<span className="text-[10px] text-slate-600">/90</span></div>
-            <div className="hidden sm:block text-center w-28 scale-[0.8] origin-center"><Badge v={item.verdict} /></div>
-            <div className="hidden sm:block text-right w-20 font-mono text-sm text-slate-300">{item.price}</div>
-          </div>
-        ))}
-        {data.length === 0 && <div className="p-8 text-center text-sm text-slate-500 font-mono">No analyses saved yet. Run a scan to populate the global leaderboard!</div>}
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const WatchlistGrid = ({ watchlist, onSelect }) => (
   <div className="print:hidden animate-[fadeIn_0.6s_ease] mt-10">
