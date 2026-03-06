@@ -1020,7 +1020,7 @@ export default function App() {
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [sessionFiles, setSessionFiles] = useState([]);
-  const [scanLength, setScanLength] = useState(2);
+  const [scanLength, setScanLength] = useState(1);
   
   const [username, setUsername] = useState(() => {
     try { return localStorage.getItem("value_analyst_username") || ""; }
