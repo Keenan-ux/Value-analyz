@@ -11,6 +11,7 @@ const MODES = [
   { id: "earnings", label: "Earnings Analysis", desc: "Post-earnings drift analysis", icon: "📈" },
   { id: "adr", label: "ADR Scanner", desc: "International value opportunities", icon: "🌍" },
   { id: "sector", label: "Contrarian Deep Value", desc: "Find strong companies in hated sectors", icon: "💣" },
+  { id: "etf", label: "ETF Deep Dive", desc: "Analyze and weight all holdings inside an ETF", icon: "🧺" },
 ];
 
 const TICKER_POOLS = {
@@ -229,6 +230,17 @@ const fetchFinnhubData = async (tk, key) => {
     throw new Error(d.error || "Proxy error");
   }
 };
+
+const fetchETFHoldings = async (tk, key) => {
+  if (!key || key.trim().length === 0) throw new Error("Finnhub API key required for ETF Analysis.");
+  const token = key.trim();
+  const res = await fetch(`https://finnhub.io/api/v1/etf/holdings?symbol=${tk}&token=${token}`);
+  if (!res.ok) throw new Error("Failed to fetch ETF holdings or invalid ticker.");
+  const data = await res.json();
+  if (!data.holdings || data.holdings.length === 0) throw new Error("No holdings found for this ETF. Note: finnhub etf endpoint requires a premium key.");
+  return data.holdings;
+};
+
 
 const parseAnalysis = (text) => {
   const sections = {};
@@ -507,7 +519,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
   );
 };
 
-const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLength }) => (
+const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLength, isUnlocked }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
       <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
@@ -523,20 +535,27 @@ const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLeng
         </label>
         <span className="text-[10px] text-slate-500 font-mono">Scroll or drag to adjust</span>
       </div>
-      <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={100} />
+      <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={isUnlocked ? 100 : 10} />
+      {!isUnlocked && <div className="text-right text-[9px] text-slate-500 mt-2 font-mono uppercase tracking-widest">Locked: Max 10</div>}
     </div>
 
     <div className="space-y-4">
-      {MODES.map(o => (
-        <button key={o.id} onClick={() => setMode(o.id)} className="w-full glass-button rounded-xl p-5 px-6 cursor-pointer text-left flex items-center gap-4 group hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/10">
-          <span className="text-3xl w-12 text-center">{o.icon}</span>
-          <div className="flex-1">
-            <div className="text-base font-semibold text-slate-200 mb-1">{o.label}</div>
-            <div className="text-[13px] text-slate-400">{o.desc}</div>
-          </div>
-          <span className="text-slate-500 text-lg group-hover:text-[#D4A017] transition-colors">→</span>
-        </button>
-      ))}
+      {MODES.map(o => {
+        if (o.id === "etf" && !isUnlocked) return null;
+        return (
+          <button key={o.id} onClick={() => setMode(o.id)} className="w-full glass-button rounded-xl p-5 px-6 cursor-pointer text-left flex items-center gap-4 group hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/10">
+            <span className="text-3xl w-12 text-center">{o.icon}</span>
+            <div className="flex-1">
+              <div className="text-base font-semibold text-slate-200 mb-1">
+                {o.label}
+                {o.id === "etf" && <span className="ml-3 px-2 py-0.5 bg-[#D4A017]/20 text-[#D4A017] rounded text-[9px] font-mono tracking-widest uppercase">Unlocked</span>}
+              </div>
+              <div className="text-[13px] text-slate-400">{o.desc}</div>
+            </div>
+            <span className="text-slate-500 text-lg group-hover:text-[#D4A017] transition-colors">→</span>
+          </button>
+        );
+      })}
     </div>
     
     <div className="mt-8 flex items-center justify-between p-4 px-6 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
@@ -1021,6 +1040,10 @@ export default function App() {
   const [pinError, setPinError] = useState("");
   const [sessionFiles, setSessionFiles] = useState([]);
   const [scanLength, setScanLength] = useState(1);
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    try { return localStorage.getItem("value_analyst_unlocked") === "true"; }
+    catch (e) { return false; }
+  });
   
   const [username, setUsername] = useState(() => {
     try { return localStorage.getItem("value_analyst_username") || ""; }
@@ -1033,10 +1056,17 @@ export default function App() {
   });
 
   const [leaderboard, setLeaderboard] = useState([]);
+  const [etfLeaderboard, setEtfLeaderboard] = useState([]);
+  const [showEtfs, setShowEtfs] = useState(false);
+
   useEffect(() => {
     fetch('/api/leaderboard').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setLeaderboard(data);
     }).catch(e => console.log("Global leaderboard not connected locally."));
+
+    fetch('/api/etf-leaderboard').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setEtfLeaderboard(data);
+    }).catch(e => console.log("ETF leaderboard not connected locally."));
   }, []);
 
   const [useFinnhub, setUseFinnhub] = useState(() => {
@@ -1061,6 +1091,14 @@ export default function App() {
   const fetchKeysWithPin = useCallback(async (pin, isManualSubmit = false) => {
     try {
       if (isManualSubmit) setPinError("");
+      
+      let unlocked = false;
+      if (pin === "2147") {
+        setIsUnlocked(true);
+        localStorage.setItem("value_analyst_unlocked", "true");
+        unlocked = true;
+      }
+
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1074,11 +1112,17 @@ export default function App() {
         localStorage.setItem("value_analyst_pin", pin);
         if (isManualSubmit) setShowPinModal(false);
       } else {
-        if (isManualSubmit) setPinError(data.error || "Invalid PIN");
-        else localStorage.removeItem("value_analyst_pin");
+        if (!unlocked) {
+          if (isManualSubmit) setPinError(data.error || "Invalid PIN");
+          else localStorage.removeItem("value_analyst_pin");
+        } else {
+          localStorage.setItem("value_analyst_pin", pin);
+          if (isManualSubmit) setShowPinModal(false);
+        }
       }
     } catch (e) {
-      if (isManualSubmit) setPinError("Error connecting to server.");
+      if (isManualSubmit && pin !== "2147") setPinError("Error connecting to server.");
+      else if (isManualSubmit && pin === "2147") setShowPinModal(false);
     }
   }, []);
 
@@ -1102,7 +1146,7 @@ export default function App() {
     if (typeof overrideMode === 'string') setMode(overrideMode);
     if (typeof overrideTicker === 'string') setTicker(overrideTicker);
 
-    const isTargeted = activeMode === "analyze" || activeMode === "earnings";
+    const isTargeted = activeMode === "analyze" || activeMode === "earnings" || activeMode === "etf";
     if (isTargeted && !tk) return;
 
     setLoading(true); setError(null); setRawResult(""); setParsed(null); 
@@ -1127,6 +1171,91 @@ export default function App() {
     let finalTickerUsed = tk;
 
     try {
+      if (activeMode === "etf") {
+        setStatusMsg(`Fetching full holdings for ETF ${tk}...`);
+        const holdingsRaw = await fetchETFHoldings(tk, finnhubKey);
+        
+        // Sort by percent descending and take all
+        const holdings = holdingsRaw.sort((a,b) => (b.percent || 0) - (a.percent || 0));
+        const totalWeight = holdings.reduce((sum, h) => sum + (h.percent || 0), 0);
+        
+        let cumulativeScore = 0;
+        let analyzedCount = 0;
+        let etfNotes = "";
+        
+        for (let i = 0; i < holdings.length; i++) {
+          const h = holdings[i];
+          const currentTicker = h.symbol;
+          if (!currentTicker) continue;
+          
+          setStatusMsg(`Analyzing holding ${i+1}/${holdings.length} (${currentTicker})...\nAggregating weighted intrinsic value...`);
+          
+          let ldb = "";
+          try {
+            const d = await fetchFinnhubData(currentTicker, finnhubKey);
+            if (d && d.price) {
+              ldb = `\n\n--- LIVE MARKET DATA ---\nCURRENT PRICE: $${d.price.toFixed(2)}\nOPEN: $${(d.open || 0).toFixed(2)}\nHIGH: $${(d.high || 0).toFixed(2)}\nLOW: $${(d.low || 0).toFixed(2)}\nPREV CLOSE: $${(d.prevClose || 0).toFixed(2)}\nCHANGE: ${(d.change || 0) >= 0 ? "+" : ""}${(d.change || 0).toFixed(2)} (${(d.changePct || 0) >= 0 ? "+" : ""}${(d.changePct || 0).toFixed(2)}%)\n${d.company ? `COMPANY: ${d.company}\n` : ''}${d.sector ? `SECTOR: ${d.sector}\n` : ''}${d.marketCap ? `MARKET CAP: ${d.marketCap}\n` : ''}${d.pe ? `P/E: ${d.pe.toFixed(2)}\n` : ''}${d.pb ? `P/B: ${d.pb.toFixed(2)}\n` : ''}${d.divYield ? `DIV YIELD: ${d.divYield.toFixed(2)}%\n` : ''}${d.wk52High ? `52W HIGH: $${d.wk52High.toFixed(2)}\n` : ''}${d.wk52Low ? `52W LOW: $${d.wk52Low.toFixed(2)}\n` : ''}\nYOU MUST USE $${d.price.toFixed(2)} AS CURRENT PRICE AND THE QUANTITATIVE METRICS ABOVE. Do NOT search the web for current pricing.\n--- END LIVE DATA ---`;
+            }
+          } catch(e) {}
+
+          const baseInstr = `Perform a complete fundamental value analysis on ${currentTicker}. Search the web for qualitative data, earnings history, and news. ${useFinnhub ? "YOU MUST USE THE PROVIDED LIVE MARKET DATA FOR ALL PRICING AND QUANTITATIVE METRICS. DO NOT SEARCH THE WEB FOR CURRENT STOCK PRICE." : ""}`;
+          const analysisPromptText = `MODE: analyze\nTICKER: ${currentTicker}\n\n${ldb}\n\n${baseInstr}\n\nOutput in the required structured format. NO PLACEHOLDERS. FILL EVERY FIELD.`;
+          
+          try {
+            const txt = await callGemini(analysisPromptText, SYSTEM_PROMPT, activeGeminiKey, []);
+            const p = parseAnalysis(txt);
+            const tempSc = parseScores(p.SCORES);
+            const trueScore = (tempSc.EARNINGS_QUALITY||0) + (tempSc.BALANCE_SHEET||0) + (tempSc.CASH_FLOW||0) + 
+                              (tempSc.VALUATION||0) + (tempSc.CAPITAL_ALLOCATION||0) + (tempSc.COMPETITIVE_MOAT||0) + 
+                              (tempSc.MANAGEMENT||0) + (tempSc.CATALYST||0) + (tempSc.RISK_PROFILE||0);
+            
+            if (trueScore > 0) {
+              const weightMultiplier = (h.percent || 0) / totalWeight;
+              cumulativeScore += (trueScore * weightMultiplier);
+              analyzedCount++;
+              etfNotes += `${currentTicker}: ${trueScore}/90 (${((h.percent||0)/totalWeight*100).toFixed(2)}% adjusted weight)\n`;
+            }
+          } catch(e) {
+            console.warn(`Failed to analyze ${currentTicker} for ETF ${tk}`, e);
+          }
+        }
+
+        if (analyzedCount === 0) throw new Error("Could not successfully evaluate any holdings.");
+
+        const finalScore = Math.round(cumulativeScore);
+        let finalVerdict = "Strong Avoid";
+        if (finalScore >= 80) finalVerdict = "Strong Buy";
+        else if (finalScore >= 70) finalVerdict = "Buy";
+        else if (finalScore >= 55) finalVerdict = "Hold";
+        else if (finalScore >= 45) finalVerdict = "Avoid";
+        
+        finalParsed = {
+          HEADER: `TICKER: ${tk}\nCOMPANY: ${tk} ETF\nSECTOR: ETF\nMARKET_CAP: N/A\nCURRENT_PRICE: N/A\nROBINHOOD: Yes`,
+          SCREENING_RATIONALE: `Aggregated Deep Value Analysis of ${analyzedCount} underlying holdings.`,
+          THESIS: `The value of this ETF is derived purely from its weighed constituent fundamentals. The aggregated composite intrinsic value score of the underlying portfolio is ${finalScore}/90.`,
+          QUALITATIVE: `Constituent Weights & Scores:\n${etfNotes}`,
+          VERDICT: finalVerdict,
+          SCORES: `EARNINGS_QUALITY: ${Math.round(finalScore/9)}\nBALANCE_SHEET: ${Math.round(finalScore/9)}\nCASH_FLOW: ${Math.round(finalScore/9)}\nVALUATION: ${Math.round(finalScore/9)}\nCAPITAL_ALLOCATION: ${Math.round(finalScore/9)}\nCOMPETITIVE_MOAT: ${Math.round(finalScore/9)}\nMANAGEMENT: ${Math.round(finalScore/9)}\nCATALYST: ${Math.round(finalScore/9)}\nRISK_PROFILE: ${Math.round(finalScore/9)}`
+        };
+        finalRaw = `[ETF Composite Analysis generated automatically via constituent weighting]\n\n${etfNotes}`;
+        
+        setParsed(finalParsed);
+        setRawResult(finalRaw);
+        
+        const newEntry = {
+          ticker: tk, company: `${tk} ETF`, score: finalScore, verdict: finalVerdict, price: 'ETF', timestamp: Date.now(), username: username || "Anonymous User"
+        };
+        fetch('/api/etf-leaderboard', {
+           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newEntry)
+        }).then(r => r.json()).then(data => {
+           if (Array.isArray(data)) setEtfLeaderboard(data);
+        }).catch(e => console.log("Live upload failed", e));
+        
+        setLoading(false);
+        setStatusMsg("");
+        return;
+      }
+
       while (attempt <= maxAttempts) {
         let currentTicker = tk;
         let currentLq = null;
@@ -1377,8 +1506,12 @@ export default function App() {
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
           <>
-            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} scanLength={scanLength} setScanLength={setScanLength} />
-            <LeaderboardDisplay data={leaderboard} onSelect={handleHistorySelect} />
+            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} />
+            <div className="flex justify-center gap-4 mb-4 mt-6">
+               <button onClick={() => setShowEtfs(false)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${!showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>Stocks</button>
+               <button onClick={() => setShowEtfs(true)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>ETFs Tracker</button>
+            </div>
+            <LeaderboardDisplay data={showEtfs ? etfLeaderboard : leaderboard} onSelect={handleHistorySelect} />
             {watchlist.length > 0 && <WatchlistGrid watchlist={watchlist} onSelect={handleHistorySelect} />}
           </>
         )}
