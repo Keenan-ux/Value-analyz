@@ -108,7 +108,7 @@ RULES:
 - Always use the provided Finnhub LIVE MARKET DATA for prices and metrics if available.
 - Use ranges, not point estimates. Say "the data suggests" not "the stock will."
 - Score each dimension 1-10.
-- Strong Buy >= 82/90, Buy >= 75/90, Hold 55-74, Avoid < 55, Strong Avoid < 45.
+- Strong Buy >= 80/90, Buy >= 70/90, Hold 55-69, Avoid < 55, Strong Avoid < 45.
 - This is for educational/research purposes only, not financial advice.`;
 
 
