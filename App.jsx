@@ -424,7 +424,7 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
   </header>
 );
 
-const WelcomeScreen = ({ setMode, username, setUsername }) => (
+const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLength }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
       <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
@@ -432,6 +432,28 @@ const WelcomeScreen = ({ setMode, username, setUsername }) => (
         Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
       </p>
     </div>
+
+    <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
+      <div className="flex justify-between items-center mb-4">
+        <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <span>⚙️</span> Autonomous Scan Length
+        </label>
+        <span className="text-[#D4A017] font-mono font-bold">{scanLength} {scanLength === 1 ? 'Ticker' : 'Tickers'}</span>
+      </div>
+      <input 
+        type="range" 
+        min="1" 
+        max="100" 
+        value={scanLength} 
+        onChange={(e) => setScanLength(parseInt(e.target.value))}
+        className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#D4A017]"
+      />
+      <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-2">
+        <span>Quick (1)</span>
+        <span>Deep Search (100)</span>
+      </div>
+    </div>
+
     <div className="space-y-4">
       {MODES.map(o => (
         <button key={o.id} onClick={() => setMode(o.id)} className="w-full glass-button rounded-xl p-5 px-6 cursor-pointer text-left flex items-center gap-4 group hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/10">
@@ -887,6 +909,7 @@ export default function App() {
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [sessionFiles, setSessionFiles] = useState([]);
+  const [scanLength, setScanLength] = useState(2);
   
   const [username, setUsername] = useState(() => {
     try { return localStorage.getItem("value_analyst_username") || ""; }
@@ -982,7 +1005,7 @@ export default function App() {
       return;
     }
 
-    const maxAttempts = isTargeted ? 1 : 6; 
+    const maxAttempts = isTargeted ? 1 : scanLength; 
     let attempt = 1;
     let sessionExcluded = []; 
     let localBatch = [];
@@ -1236,7 +1259,7 @@ export default function App() {
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
           <>
-            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} />
+            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} scanLength={scanLength} setScanLength={setScanLength} />
             <LeaderboardDisplay data={leaderboard} onSelect={handleHistorySelect} />
             {watchlist.length > 0 && <WatchlistGrid watchlist={watchlist} onSelect={handleHistorySelect} />}
           </>
