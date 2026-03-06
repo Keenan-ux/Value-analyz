@@ -26,9 +26,9 @@ export default async function handler(req, res) {
       
       leaderboard.push(entry);
       
-      // Sort descending by score and keep top 100
+      // Sort descending by score and keep top 25
       leaderboard.sort((a, b) => b.score - a.score);
-      leaderboard = leaderboard.slice(0, 100);
+      leaderboard = leaderboard.slice(0, 25);
 
       await kv.set('global_leaderboard', leaderboard);
       

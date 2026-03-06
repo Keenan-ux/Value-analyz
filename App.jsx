@@ -1117,35 +1117,32 @@ export default function App() {
           const tot = (sc.EARNINGS_QUALITY||0) + (sc.BALANCE_SHEET||0) + (sc.CASH_FLOW||0) + (sc.VALUATION||0) + (sc.CAPITAL_ALLOCATION||0) + 
                       (sc.COMPETITIVE_MOAT||0) + (sc.MANAGEMENT||0) + (sc.CATALYST||0) + (sc.RISK_PROFILE||0);
           
-          if (tot > 0) {
-            const h = parseKV(finalParsed.HEADER);
-            const newEntry = {
-              ticker: finalTickerUsed,
-              company: finalLq?.company || h.COMPANY || finalTickerUsed,
-              score: tot,
-              verdict: finalParsed.VERDICT,
-              price: finalLq ? `$${finalLq.price.toFixed(2)}` : h.CURRENT_PRICE,
-              timestamp: Date.now(),
-              rawResult: finalRaw,
-              lq: finalLq,
-              username: username || "Anonymous User"
-            };
-            
-            // Optimistic update locally
-            setLeaderboard(prev => {
-              const filtered = prev.filter(item => item.ticker !== finalTickerUsed);
-              return [...filtered, newEntry].sort((a, b) => b.score - a.score).slice(0, 100); 
-            });
+          const h = parseKV(finalParsed.HEADER);
+          const newEntry = {
+            ticker: finalTickerUsed,
+            company: finalLq?.company || h.COMPANY || finalTickerUsed,
+            score: tot,
+            verdict: finalParsed.VERDICT,
+            price: finalLq ? `$${finalLq.price.toFixed(2)}` : h.CURRENT_PRICE,
+            timestamp: Date.now(),
+            username: username || "Anonymous User"
+            // Note: INTENTIONALLY EXCLUDING rawResult and lq from the global payload to save KV space
+          };
+          
+          // Optimistic update locally
+          setLeaderboard(prev => {
+            const filtered = prev.filter(item => item.ticker !== finalTickerUsed);
+            return [...filtered, newEntry].sort((a, b) => b.score - a.score).slice(0, 25); 
+          });
 
-            // Post to Vercel KV global leaderboard
-            fetch('/api/leaderboard', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newEntry)
-            }).then(r => r.json()).then(data => {
-              if (Array.isArray(data)) setLeaderboard(data);
-            }).catch(e => console.log("Live upload failed - KV not setup yet"));
-          }
+          // Post to Vercel KV global leaderboard (Top 25)
+          fetch('/api/leaderboard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newEntry)
+          }).then(r => r.json()).then(data => {
+            if (Array.isArray(data)) setLeaderboard(data);
+          }).catch(e => console.log("Live upload failed - KV not setup yet"));
         }
       } else if (!isTargeted && !streamText) {
         setScannedBatch(localBatch);
@@ -1166,7 +1163,17 @@ export default function App() {
     if (isSaved) setWatchlist(w => w.filter(i => i.ticker !== currentTicker));
     else setWatchlist(w => [{ ticker: currentTicker, company: lq?.company || parseKV(parsed?.HEADER)?.COMPANY || currentTicker, verdict: parsed?.VERDICT, price: lq ? `$${lq.price.toFixed(2)}` : parseKV(parsed?.HEADER)?.CURRENT_PRICE, timestamp: Date.now(), rawResult, lq }, ...w]);
   };
-  const handleHistorySelect = (item) => { setMode("analyze"); setTicker(item.ticker); setRawResult(item.rawResult); setParsed(parseAnalysis(item.rawResult)); setLq(item.lq || null); };
+  
+  // Changed: No longer loads raw result from memory, instead triggers a fresh live analysis
+  const handleHistorySelect = (item) => { 
+    if (item.rawResult) {
+      // Local Watchlist format (has full data)
+      setMode("analyze"); setTicker(item.ticker); setRawResult(item.rawResult); setParsed(parseAnalysis(item.rawResult)); setLq(item.lq || null);
+    } else {
+      // Global Leaderboard format (needs fresh run)
+      run("analyze", item.ticker);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0E17] text-slate-200 font-sans selection:bg-[#D4A017] selection:text-[#0A0E17]">
