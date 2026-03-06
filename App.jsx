@@ -424,6 +424,77 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
   </header>
 );
 
+const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const startY = useRef(0);
+  const startVal = useRef(value);
+
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    startY.current = e.clientY || (e.touches && e.touches[0].clientY);
+    startVal.current = value;
+    document.body.style.userSelect = "none";
+  };
+
+  const handlePointerMove = useCallback((e) => {
+    if (!isDragging) return;
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const deltaY = startY.current - clientY;
+    
+    // Sensitivity: 1 unit change per 3px of drag
+    const newVal = Math.max(min, Math.min(max, startVal.current + Math.floor(deltaY / 3)));
+    if (newVal !== value) onChange(newVal);
+  }, [isDragging, value, min, max, onChange]);
+
+  const handlePointerUp = useCallback(() => {
+    setIsDragging(false);
+    document.body.style.userSelect = "";
+  }, []);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -1 : 1;
+    const newVal = Math.max(min, Math.min(max, value + delta));
+    if (newVal !== value) onChange(newVal);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handlePointerMove);
+      window.addEventListener('mouseup', handlePointerUp);
+      window.addEventListener('touchmove', handlePointerMove, { passive: false });
+      window.addEventListener('touchend', handlePointerUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('mouseup', handlePointerUp);
+      window.removeEventListener('touchmove', handlePointerMove);
+      window.removeEventListener('touchend', handlePointerUp);
+    };
+  }, [isDragging, handlePointerMove, handlePointerUp]);
+
+  return (
+    <div 
+      className="flex items-center justify-center p-3 border-2 border-[#D4A017]/30 bg-[#D4A017]/5 rounded-lg cursor-ns-resize hover:border-[#D4A017] transition-colors relative touch-none select-none"
+      onMouseDown={handlePointerDown}
+      onTouchStart={handlePointerDown}
+      onWheel={handleWheel}
+      title="Scroll or Drag up/down to change"
+    >
+      <div className="absolute inset-y-0 left-0 flex flex-col items-center justify-center pl-3 text-[#D4A017]/40 text-[10px] space-y-3 pointer-events-none">
+        <span>▲</span>
+        <span>▼</span>
+      </div>
+      <div className="text-3xl font-mono font-bold text-[#D4A017]">
+        {value}
+      </div>
+      <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-[10px] font-mono text-[#D4A017]/60 pointer-events-none uppercase tracking-widest">
+        {value === 1 ? 'Ticker' : 'Tickers'}
+      </div>
+    </div>
+  );
+};
+
 const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLength }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
@@ -438,20 +509,9 @@ const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLeng
         <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
           <span>⚙️</span> Autonomous Scan Length
         </label>
-        <span className="text-[#D4A017] font-mono font-bold">{scanLength} {scanLength === 1 ? 'Ticker' : 'Tickers'}</span>
+        <span className="text-[10px] text-slate-500 font-mono">Scroll or drag to adjust</span>
       </div>
-      <input 
-        type="range" 
-        min="1" 
-        max="100" 
-        value={scanLength} 
-        onChange={(e) => setScanLength(parseInt(e.target.value))}
-        className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#D4A017]"
-      />
-      <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-2">
-        <span>Quick (1)</span>
-        <span>Deep Search (100)</span>
-      </div>
+      <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={100} />
     </div>
 
     <div className="space-y-4">
