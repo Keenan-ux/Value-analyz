@@ -453,6 +453,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 
   const handleWheel = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const delta = e.deltaY > 0 ? -1 : 1;
     const newVal = Math.max(min, Math.min(max, value + delta));
     if (newVal !== value) onChange(newVal);
@@ -1143,8 +1144,12 @@ export default function App() {
             [freshPool[i], freshPool[j]] = [freshPool[j], freshPool[i]];
           }
 
-          // Shrink the subset to 4 to further reduce the AI's ability to pick a favorite
-          const subsetPool = freshPool.slice(0, 4);
+          // Shrink the subset to 5 to further reduce the AI's ability to pick a favorite, and shuffle again
+          const subsetPool = freshPool.slice(0, 5);
+          for (let i = subsetPool.length - 1; i > 0; i--) {
+            const j = Math.floor(secureRandom() * (i + 1));
+            [subsetPool[i], subsetPool[j]] = [subsetPool[j], subsetPool[i]];
+          }
           const capInstruction = ` IMPORTANT: You MUST exclusively select your final ticker from this exact, highly-constrained random subset of stocks: [${subsetPool.join(", ")}]. Pick the single best value play from these exactly. Do not pick ANY stock outside this list.`;
 
           const discoveryPrompts = {
