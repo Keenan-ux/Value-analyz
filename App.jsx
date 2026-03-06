@@ -500,14 +500,17 @@ const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLeng
 );
 
 const LiveScanTable = ({ data }) => (
-  <div className="print:hidden animate-[fadeIn_0.5s_ease] mt-8 mb-6 bg-[#0A0E17]/80 border border-[#D4A017]/30 rounded-lg overflow-hidden backdrop-blur-sm relative">
+  <div className="print:hidden animate-[fadeIn_0.5s_ease] mt-8 mb-6 max-w-xl mx-auto bg-[#0A0E17]/80 border border-[#D4A017]/30 rounded-lg overflow-hidden backdrop-blur-sm relative shadow-2xl shadow-black">
     <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4A017]/50 to-transparent animate-[pulse_2s_ease-in-out_infinite]" />
-    <div className="bg-[#D4A017]/10 px-4 py-2 border-b border-[#D4A017]/20 flex items-center gap-2">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4A017] opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4A017]"></span>
-      </span>
-      <span className="text-xs font-mono text-[#D4A017] uppercase tracking-widest font-bold">Live Scan Feed</span>
+    <div className="bg-[#D4A017]/10 px-4 py-3 border-b border-[#D4A017]/20 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4A017] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4A017]"></span>
+        </span>
+        <span className="text-xs font-mono text-[#D4A017] uppercase tracking-widest font-bold">Live Scan Feed</span>
+      </div>
+      <span className="text-[10px] font-mono text-[#D4A017]/50 uppercase tracking-widest">Global Top 50 Syncing...</span>
     </div>
     
     <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -744,10 +747,10 @@ const LoadingState = ({ message, isAutonomous }) => (
       <div className="absolute inset-0 border-2 border-[#1E293B] border-t-[#D4A017] rounded-full animate-[spin_1s_linear_infinite]" />
       <div className="absolute inset-2 border-2 border-[#1E293B] border-b-amber-500 rounded-full animate-[spin_1.5s_linear_infinite_reverse]" />
     </div>
-    <div className="font-mono text-[13px] text-slate-400 whitespace-pre-line leading-loose text-left max-w-xl mx-auto">
+    <div className="font-mono text-[13px] text-slate-400 whitespace-pre-line leading-loose text-center max-w-xl mx-auto">
       <span className="inline-block w-2 h-2 rounded-full bg-[#D4A017] mr-2.5 animate-[pulse_1.5s_ease-in-out_infinite]" />{message}
     </div>
-    <div className="mt-6 text-xs text-slate-500">
+    <div className="mt-6 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
       {isAutonomous 
         ? "Autonomous scanning reviews multiple candidates to find a true value play. This may take 1-3 minutes..." 
         : "Extracting Finnhub data & generating fundamental analysis... This may take 30-60 seconds."}
