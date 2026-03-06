@@ -63,8 +63,8 @@ export default async function handler(req, res) {
       // Ensure verdict corresponds to the new median roughly, or just keep latest verdict?
       // Since verdict is based on score tiers, we recount it to stay accurate to the median text:
       let medianVerdict = "Strong Avoid";
-      if (median >= 80) medianVerdict = "Strong Buy";
-      else if (median >= 70) medianVerdict = "Buy";
+      if (median >= 82) medianVerdict = "Strong Buy";
+      else if (median >= 75) medianVerdict = "Buy";
       else if (median >= 55) medianVerdict = "Hold";
       else if (median >= 45) medianVerdict = "Avoid";
       entry.verdict = medianVerdict;
