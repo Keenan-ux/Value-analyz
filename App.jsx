@@ -435,8 +435,8 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
         <span className={`text-xs font-mono w-28 ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Finnhub API" : "Web search mode"}</span>
       </div>
 
-      <button onClick={onUnlockClick} className="mr-2 px-3 py-1.5 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-xs font-mono transition-colors flex items-center gap-1.5" title="Unlock saved keys via PIN">
-        <span>🔐</span> <span className="hidden sm:inline">Auto-fill</span>
+      <button onClick={onUnlockClick} className="mr-2 px-3 py-1.5 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-xs font-mono transition-colors flex items-center gap-1.5 shadow-[0_0_10px_rgba(212,160,23,0.2)]" title="Unlock features via PIN">
+        <span>🔓</span> <span className="hidden sm:inline font-bold">Unlock</span>
       </button>
 
       <div className="flex flex-col gap-1 hidden md:flex">
@@ -541,7 +541,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
   );
 };
 
-const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLength, isUnlocked }) => (
+const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLength, isUnlocked, onUnlockClick }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
       <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
@@ -558,7 +558,7 @@ const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLeng
         <span className="text-[10px] text-slate-500 font-mono">Scroll or drag to adjust</span>
       </div>
       <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={isUnlocked ? 100 : 10} />
-      {!isUnlocked && <div className="text-right text-[9px] text-slate-500 mt-2 font-mono uppercase tracking-widest">Locked: Max 10</div>}
+      {!isUnlocked && <button onClick={onUnlockClick} className="block w-full text-right text-[10px] text-[#D4A017] mt-2 font-mono uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-none p-0 transition-all">🔒 Locked: Max 10 (Click to Unlock)</button>}
     </div>
 
     <div className="space-y-4">
@@ -739,7 +739,7 @@ const WatchlistGrid = ({ watchlist, onSelect }) => (
   </div>
 );
 
-const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, marketCapFilter, setMarketCapFilter, files, setFiles, isUnlocked, assetType, setAssetType, etfDepth, setEtfDepth, customEtfCount, setCustomEtfCount }) => {
+const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, marketCapFilter, setMarketCapFilter, files, setFiles, isUnlocked, assetType, setAssetType, etfDepth, setEtfDepth, customEtfCount, setCustomEtfCount, onUnlockClick }) => {
   const activeMode = MODES.find(m => m.id === mode);
   const isTargeted = mode === "analyze" || mode === "earnings";
   const isValid = !isTargeted || ticker.trim().length > 0;
@@ -795,7 +795,7 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
               <div className="mb-8 relative z-10 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-inner">
                 <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-3 flex items-center gap-2">
                   <span>Valuation Depth</span>
-                  {!isUnlocked && <span className="text-[9px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30">LOCKED 🔒</span>}
+                  {!isUnlocked && <button onClick={onUnlockClick} className="text-[9px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30 cursor-pointer transition-colors shadow-sm">LOCKED 🔒</button>}
                   {isUnlocked && <span className="text-[9px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded border border-green-500/30">UNLOCKED 🔓</span>}
                 </label>
                 
@@ -1601,8 +1601,8 @@ export default function App() {
           <div className="glass-panel p-8 rounded-2xl max-w-sm w-full outline outline-1 outline-[#1E293B] shadow-2xl relative text-center bg-[#0A0E17]">
             <button onClick={() => setShowPinModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 bg-transparent border-none cursor-pointer text-xl">✕</button>
             <div className="text-4xl mb-4">🔐</div>
-            <h3 className="text-xl font-semibold text-slate-200 m-0 mb-2">Unlock API Keys</h3>
-            <p className="text-sm text-slate-400 m-0 mb-6">Enter your PIN to auto-fill keys from Vercel.</p>
+            <h3 className="text-xl font-semibold text-slate-200 m-0 mb-2">Unlock Advanced Features</h3>
+            <p className="text-sm text-slate-400 m-0 mb-6 leading-relaxed">Enter PIN to access deep ETF analysis, 100-max scan lengths, and auto-populated API keys.</p>
             <form onSubmit={(e) => { e.preventDefault(); fetchKeysWithPin(pinInput, true); }}>
               <input type="password" autoFocus value={pinInput} onChange={(e) => { setPinInput(e.target.value); setPinError(""); }} placeholder="Enter PIN..." className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#D4A017] text-slate-200 px-4 py-3 rounded-xl mb-4 text-center text-lg tracking-[0.5em] font-mono outline-none" />
               {pinError && <div className="text-red-500 text-xs font-mono text-center mb-4">{pinError}</div>}
@@ -1617,7 +1617,7 @@ export default function App() {
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
           <>
-            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} />
+            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />
             <div className="flex justify-center gap-4 mb-4 mt-6">
                <button onClick={() => setShowEtfs(false)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${!showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>Stocks</button>
                <button onClick={() => setShowEtfs(true)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>ETFs Tracker</button>
@@ -1627,7 +1627,7 @@ export default function App() {
           </>
         )}
 
-        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={() => run()} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} files={sessionFiles} setFiles={setSessionFiles} isUnlocked={isUnlocked} assetType={assetType} setAssetType={setAssetType} etfDepth={etfDepth} setEtfDepth={setEtfDepth} customEtfCount={customEtfCount} setCustomEtfCount={setCustomEtfCount} />}
+        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={() => run()} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} files={sessionFiles} setFiles={setSessionFiles} isUnlocked={isUnlocked} assetType={assetType} setAssetType={setAssetType} etfDepth={etfDepth} setEtfDepth={setEtfDepth} customEtfCount={customEtfCount} setCustomEtfCount={setCustomEtfCount} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />}
         
         {unlucky && !loading && (
           <div className="animate-[fadeIn_0.4s_ease] bg-[#111827] border border-[#1E293B] rounded-xl p-10 text-center mt-6">
