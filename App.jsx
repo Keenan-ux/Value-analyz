@@ -1276,10 +1276,11 @@ export default function App() {
           setStatusMsg(`Analyzing holding ${i+1}/${holdings.length} (${currentTicker})...\nAggregating weighted intrinsic value...`);
           
           let ldb = "";
+          let liveQuote = null;
           try {
-            const d = await fetchFinnhubData(currentTicker, finnhubKey);
-            if (d && d.price) {
-              ldb = `\n\n--- LIVE MARKET DATA ---\nCURRENT PRICE: $${d.price.toFixed(2)}\nOPEN: $${(d.open || 0).toFixed(2)}\nHIGH: $${(d.high || 0).toFixed(2)}\nLOW: $${(d.low || 0).toFixed(2)}\nPREV CLOSE: $${(d.prevClose || 0).toFixed(2)}\nCHANGE: ${(d.change || 0) >= 0 ? "+" : ""}${(d.change || 0).toFixed(2)} (${(d.changePct || 0) >= 0 ? "+" : ""}${(d.changePct || 0).toFixed(2)}%)\n${d.company ? `COMPANY: ${d.company}\n` : ''}${d.sector ? `SECTOR: ${d.sector}\n` : ''}${d.marketCap ? `MARKET CAP: ${d.marketCap}\n` : ''}${d.pe ? `P/E: ${d.pe.toFixed(2)}\n` : ''}${d.pb ? `P/B: ${d.pb.toFixed(2)}\n` : ''}${d.divYield ? `DIV YIELD: ${d.divYield.toFixed(2)}%\n` : ''}${d.wk52High ? `52W HIGH: $${d.wk52High.toFixed(2)}\n` : ''}${d.wk52Low ? `52W LOW: $${d.wk52Low.toFixed(2)}\n` : ''}\nYOU MUST USE $${d.price.toFixed(2)} AS CURRENT PRICE AND THE QUANTITATIVE METRICS ABOVE. Do NOT search the web for current pricing.\n--- END LIVE DATA ---`;
+            liveQuote = await fetchFinnhubData(currentTicker, finnhubKey);
+            if (liveQuote && liveQuote.price) {
+              ldb = `\n\n--- LIVE MARKET DATA ---\nCURRENT PRICE: $${liveQuote.price.toFixed(2)}\nOPEN: $${(liveQuote.open || 0).toFixed(2)}\nHIGH: $${(liveQuote.high || 0).toFixed(2)}\nLOW: $${(liveQuote.low || 0).toFixed(2)}\nPREV CLOSE: $${(liveQuote.prevClose || 0).toFixed(2)}\nCHANGE: ${(liveQuote.change || 0) >= 0 ? "+" : ""}${(liveQuote.change || 0).toFixed(2)} (${(liveQuote.changePct || 0) >= 0 ? "+" : ""}${(liveQuote.changePct || 0).toFixed(2)}%)\n${liveQuote.company ? `COMPANY: ${liveQuote.company}\n` : ''}${liveQuote.sector ? `SECTOR: ${liveQuote.sector}\n` : ''}${liveQuote.marketCap ? `MARKET CAP: ${liveQuote.marketCap}\n` : ''}${liveQuote.pe ? `P/E: ${liveQuote.pe.toFixed(2)}\n` : ''}${liveQuote.pb ? `P/B: ${liveQuote.pb.toFixed(2)}\n` : ''}${liveQuote.divYield ? `DIV YIELD: ${liveQuote.divYield.toFixed(2)}%\n` : ''}${liveQuote.wk52High ? `52W HIGH: $${liveQuote.wk52High.toFixed(2)}\n` : ''}${liveQuote.wk52Low ? `52W LOW: $${liveQuote.wk52Low.toFixed(2)}\n` : ''}\nYOU MUST USE $${liveQuote.price.toFixed(2)} AS CURRENT PRICE AND THE QUANTITATIVE METRICS ABOVE. Do NOT search the web for current pricing.\n--- END LIVE DATA ---`;
             }
           } catch(e) {}
 
@@ -1300,6 +1301,30 @@ export default function App() {
               cumulativeScore += (trueScore * normalizedWeightMultiplier);
               analyzedCount++;
               etfNotes += `${currentTicker}: ${trueScore}/90 (${(normalizedWeightMultiplier * 100).toFixed(2)}% adjusted weight)\n`;
+
+              // Exfiltration of high scores to global leaderboard
+              if (trueScore >= 70) {
+                let holdingVerdict = "Buy";
+                if (trueScore >= 80) holdingVerdict = "Strong Buy";
+                
+                const newHoldingEntry = {
+                  ticker: currentTicker, 
+                  company: liveQuote?.company || currentTicker, 
+                  score: trueScore, 
+                  verdict: holdingVerdict, 
+                  price: liveQuote?.price ? `$${liveQuote.price.toFixed(2)}` : 'N/A', 
+                  timestamp: Date.now(), 
+                  username: username || "Anonymous User"
+                };
+                
+                fetch('/api/leaderboard', {
+                  method: 'POST', 
+                  headers: { 'Content-Type': 'application/json' }, 
+                  body: JSON.stringify(newHoldingEntry)
+                }).then(r => r.json()).then(data => {
+                  if (Array.isArray(data)) setLeaderboard(data);
+                }).catch(e => console.log("Live upload failed for ETF holding", e));
+              }
             }
           } catch(e) {
             console.warn(`Failed to analyze ${currentTicker} for ETF ${tk}`, e);
