@@ -416,42 +416,58 @@ const FairValueVisualizer = ({ current, fv, quote }) => {
 };
 
 // ─── MAIN LAYOUT COMPONENTS ───
-const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey, setFinnhubKey, hasData, onReset, onUnlockClick }) => (
+const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey, setFinnhubKey, hasData, onReset, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-7 py-3.5 flex items-center justify-between shadow-sm">
     <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-gold to-[#B8860B] flex items-center justify-center text-base font-bold text-brand-dark font-mono shadow-[0_0_15px_rgba(212,160,23,0.4)]">V</div>
       <div>
         <div className="text-[15px] font-semibold text-slate-200">Value Analyst</div>
-        <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">
-          Chicago Booth Protocol <span className="text-green-500 ml-2">● {useFinnhub ? "Finnhub Enabled" : "Web Search"}</span>
+        <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase flex items-center gap-2">
+          Chicago Booth Protocol <span className="text-green-500">● {useFinnhub ? "Finnhub Enabled" : "Web Search"}</span>
         </div>
       </div>
     </div>
+    
     <div className="flex items-center gap-4">
+      {/* Cloud Auth Section Moved Here */}
+      <div className="flex items-center gap-3 border-r border-[#1E293B] pr-4 mr-1 hidden sm:flex">
+        {isLoggedIn ? (
+          <div className="flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-lg border border-[#1E293B] shadow-inner">
+            <span className="text-[#D4A017] text-sm">🟢</span>
+            <div className="text-slate-200 font-mono text-[11px] font-bold tracking-wider">{username}</div>
+            <button onClick={onLogout} className="text-[10px] font-mono text-slate-500 hover:text-red-400 ml-2 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Logout</button>
+          </div>
+        ) : (
+          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-slate-700 text-slate-300 font-mono text-[11px] uppercase tracking-widest py-1.5 px-4 rounded-md cursor-pointer transition-colors shadow-sm">
+            Sign In / Register
+          </button>
+        )}
+      </div>
+
       <div className="flex items-center gap-2 mr-2">
         <button onClick={() => setUseFinnhub(!useFinnhub)} className={`relative w-11 h-6 rounded-full border-none cursor-pointer transition-colors duration-300 p-0 ${useFinnhub ? 'bg-green-500' : 'bg-slate-700'}`}>
           <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all duration-300 ease-in-out ${useFinnhub ? 'left-[22px]' : 'left-0.5'}`} />
         </button>
-        <span className={`text-xs font-mono w-28 ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Finnhub API" : "Web search mode"}</span>
+        <span className={`text-[10px] font-mono w-24 uppercase tracking-widest ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Live Data" : "Web Search"}</span>
       </div>
 
-      <button onClick={onUnlockClick} className="mr-2 px-3 py-1.5 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-xs font-mono transition-colors flex items-center gap-1.5 shadow-[0_0_10px_rgba(212,160,23,0.2)]" title="Unlock features via PIN">
-        <span>🔓</span> <span className="hidden sm:inline font-bold">Unlock</span>
+      <button onClick={onUnlockClick} className="mr-2 px-3 py-1.5 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-[11px] font-mono transition-colors flex items-center gap-1.5 shadow-[0_0_10px_rgba(212,160,23,0.2)]" title="Unlock features via PIN">
+        <span>🔓</span> <span className="hidden lg:inline font-bold uppercase tracking-widest">Unlock</span>
       </button>
 
       <div className="flex flex-col gap-1 hidden md:flex">
-        <label className="text-[9px] text-slate-400 font-mono uppercase">Gemini API Key</label>
-        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Paste Gemini Key..." className="w-28 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+        <label className="text-[9px] text-slate-400 font-mono uppercase">Gemini Key</label>
+        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Google API..." className="w-24 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
       </div>
 
       <div className="flex flex-col gap-1 hidden md:flex">
-        <label className="text-[9px] text-slate-400 font-mono uppercase">Finnhub API Key</label>
-        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Paste Finnhub Key..." className="w-28 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+        <label className="text-[9px] text-slate-400 font-mono uppercase">Finnhub Key</label>
+        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Live Data API..." className="w-24 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
       </div>
 
       {hasData && (
-        <button onClick={onReset} className="self-end bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3.5 py-1.5 rounded cursor-pointer text-xs font-mono transition-colors">
-          ← New Scan
+        <button onClick={onReset} className="self-end bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[11px] uppercase tracking-widest font-mono transition-colors ml-2">
+          New Scan
         </button>
       )}
     </div>
@@ -541,7 +557,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
   );
 };
 
-const WelcomeScreen = ({ setMode, username, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, onLoginClick, onLogout }) => (
+const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
       <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
@@ -576,28 +592,6 @@ const WelcomeScreen = ({ setMode, username, scanLength, setScanLength, isUnlocke
           </button>
         );
       })}
-    </div>
-    
-    <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 px-6 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg gap-4">
-      <div className="flex items-center gap-4">
-        <span className="text-3xl">{isLoggedIn ? "🟢" : "👤"}</span>
-        <div>
-          <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Analyst Account</label>
-          {isLoggedIn ? (
-            <div className="text-slate-200 font-bold text-lg">{username}</div>
-          ) : (
-             <div className="text-slate-400 text-sm italic">Not signed in</div>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col items-end gap-2 text-right">
-        {isLoggedIn ? (
-          <button onClick={onLogout} className="text-xs font-mono text-red-500/80 hover:text-red-400 transition-colors cursor-pointer bg-[#0A0E17] border border-red-500/30 px-3 py-1.5 rounded-md">Sign Out</button>
-        ) : (
-          <button onClick={onLoginClick} className="bg-gradient-to-r from-[#D4A017] to-[#B8860B] text-[#0A0E17] font-semibold py-1.5 px-6 rounded-md text-sm cursor-pointer hover:opacity-90 transition-opacity whitespace-nowrap">Sign In / Register</button>
-        )}
-        <div className="text-[9px] text-slate-500 font-mono">Cloud Sync {isLoggedIn ? 'Active' : 'Disabled'}</div>
-      </div>
     </div>
 
     <div className="mt-6 bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-left shadow-lg">
@@ -1722,12 +1716,12 @@ export default function App() {
         </div>
       )}
 
-      <TopNav useFinnhub={useFinnhub} setUseFinnhub={setUseFinnhub} geminiKey={geminiKey} setGeminiKey={setGeminiKey} finnhubKey={finnhubKey} setFinnhubKey={setFinnhubKey} hasData={parsed || streamText || loading || error || unlucky} onReset={reset} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />
+      <TopNav useFinnhub={useFinnhub} setUseFinnhub={setUseFinnhub} geminiKey={geminiKey} setGeminiKey={setGeminiKey} finnhubKey={finnhubKey} setFinnhubKey={setFinnhubKey} hasData={parsed || streamText || loading || error || unlucky} onReset={reset} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} isLoggedIn={isLoggedIn} username={username} onLoginClick={() => setShowLoginModal(true)} onLogout={handleLogout} />
 
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
           <>
-            <WelcomeScreen setMode={setMode} username={username} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} isLoggedIn={isLoggedIn} onLoginClick={() => setShowLoginModal(true)} onLogout={handleLogout} />
+            <WelcomeScreen setMode={setMode} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />
             <div className="flex justify-center gap-4 mb-4 mt-6">
                <button onClick={() => setShowEtfs(false)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${!showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>Stocks</button>
                <button onClick={() => setShowEtfs(true)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>ETFs Tracker</button>
