@@ -462,66 +462,69 @@ const FairValueVisualizer = ({ current, fv, quote }) => {
 };
 
 // ─── MAIN LAYOUT COMPONENTS ───
-const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey, setFinnhubKey, hasData, onReset, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
-  <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-4 sm:px-7 py-3 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-3 sm:gap-0">
-    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-      <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
-        <div className="flex flex-row sm:flex-col items-baseline sm:items-start gap-2 sm:gap-0">
-          <div className="text-[18px] font-light tracking-tight text-slate-200 leading-none">Booth <span className="text-[#B8860B] font-semibold">Check</span></div>
-          <div className="text-[9px] text-slate-500 font-mono tracking-widest uppercase sm:mt-1">
-            <span className="hidden sm:inline">Powered by the Chicago Booth methodology</span>
-            <span className="sm:hidden">Chicago Booth Protocol</span>
-          </div>
-        </div>
+const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey, setFinnhubKey, hasData, onReset, onUnlockClick, isUnlocked, isLoggedIn, username, onLoginClick, onLogout }) => (
+  <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-3 sm:px-7 py-2.5 flex items-center justify-between shadow-sm">
+    
+    {/* Left Side: Logo & Subtitle */}
+    <div className="flex items-baseline gap-1.5 sm:gap-2 hover:scale-105 transition-transform duration-300 w-auto truncate mr-2">
+      <div className="text-[17px] sm:text-[18px] font-light tracking-tight text-slate-200 leading-none shrink-0">Booth <span className="text-[#B8860B] font-semibold">Check</span></div>
+      <div className="text-[7px] sm:text-[9px] text-slate-500 font-mono tracking-widest uppercase truncate pb-0.5">
+        <span className="hidden sm:inline">Powered by the Chicago Booth method</span>
+        <span className="sm:hidden">Chicago Booth Protocol</span>
       </div>
-      
-      {/* Mobile-only Reset Button (if has data) */}
-      {hasData && (
-        <button onClick={onReset} className="sm:hidden bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[10px] uppercase tracking-widest font-mono transition-colors">
-          New Scan
-        </button>
-      )}
     </div>
     
-    <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
-      {/* Cloud Auth Section In Header */}
-      <div className="flex items-center gap-2 sm:border-r sm:border-[#1E293B] sm:pr-2">
-        {isLoggedIn ? (
-          <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-lg border border-[#1E293B] shadow-inner">
-            <span className="text-[#B8860B] text-xs">🟢</span>
-            <div className="text-slate-200 font-mono text-[10px] font-bold tracking-wider">{username}</div>
-            <button onClick={onLogout} className="text-[9px] font-mono text-slate-500 hover:text-red-400 ml-1 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Log out</button>
-          </div>
-        ) : (
-          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#B8860B]/50 text-[#B8860B] font-mono text-[10px] uppercase tracking-widest py-1 px-3 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)]">
-            Sign In
-          </button>
-        )}
+    {/* Right Side: Actions */}
+    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+      
+      {/* Mobile-only Reset Button */}
+      {hasData && (
+        <button onClick={onReset} className="sm:hidden bg-transparent border border-[#1E293B] text-slate-400 px-1.5 py-1 rounded cursor-pointer text-[8px] uppercase tracking-widest font-mono">
+          Reset
+        </button>
+      )}
+
+      {/* Cloud Auth */}
+      {isLoggedIn ? (
+        <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-md border border-[#1E293B]">
+          <span className="text-[#B8860B] text-[8px] sm:text-[10px]">🟢</span>
+          <div className="text-slate-200 font-mono text-[9px] sm:text-[10px] font-bold tracking-wider max-w-[45px] sm:max-w-none truncate">{username}</div>
+          <button onClick={onLogout} className="hidden sm:inline text-[9px] font-mono text-slate-500 hover:text-red-400 ml-1 cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Log out</button>
+        </div>
+      ) : (
+        <button onClick={onLoginClick} className="bg-[#111827] border border-[#B8860B]/50 text-[#B8860B] font-mono text-[8px] sm:text-[10px] uppercase tracking-widest py-1 px-2 sm:px-3 rounded-md cursor-pointer">
+          Sign In
+        </button>
+      )}
+
+      {/* Keys (Desktop) */}
+      <div className="flex flex-col gap-0.5 hidden xl:flex">
+        <label className="text-[8px] text-slate-400 font-mono uppercase">Gemini</label>
+        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] rounded text-slate-200 outline-none" />
       </div>
 
       <div className="flex flex-col gap-0.5 hidden xl:flex">
-        <label className="text-[8px] text-slate-400 font-mono uppercase">Gemini</label>
-        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#B8860B] rounded text-slate-200 outline-none transition-colors" />
-      </div>
-
-      <div className="flex flex-col gap-0.5 hidden xl:flex mr-2">
         <label className="text-[8px] text-slate-400 font-mono uppercase">Finnhub</label>
-        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#B8860B] rounded text-slate-200 outline-none transition-colors" />
+        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] rounded text-slate-200 outline-none" />
       </div>
 
-      <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-md border border-[#1E293B]">
-        <button onClick={() => setUseFinnhub(!useFinnhub)} className={`relative w-8 h-4 rounded-full border-none cursor-pointer transition-colors duration-300 p-0 ${useFinnhub ? 'bg-green-500' : 'bg-slate-700'}`}>
-          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-300 ease-in-out ${useFinnhub ? 'left-[18px]' : 'left-0.5'}`} />
+      {/* Unified Protocol Connections Block */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 bg-[#111827] px-2 py-1 sm:py-1.5 rounded-md border border-[#1E293B]">
+        <button onClick={() => setUseFinnhub(!useFinnhub)} className="flex items-center justify-center cursor-pointer bg-transparent border-none p-0 group" title={useFinnhub ? "Live API ON" : "Live API OFF"}>
+           <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-colors ${useFinnhub ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-slate-600'}`} />
+           <span className="hidden md:inline font-mono text-[9px] uppercase tracking-widest ml-1.5 text-slate-400">Data</span>
         </button>
-        <span className={`text-[9px] font-mono w-12 sm:w-16 uppercase tracking-widest leading-none ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Live" : "Web"}</span>
+        
+        <div className="w-[1px] h-3 sm:h-3.5 bg-[#1E293B]"></div>
+        
+        <button onClick={onUnlockClick} className="bg-transparent border-none p-0 flex items-center justify-center cursor-pointer text-[10px] sm:text-[11px] text-[#B8860B]" title="Unlock Advanced Methods">
+          {isUnlocked ? '🔓' : '🔒'}
+        </button>
       </div>
 
-      <button onClick={onUnlockClick} className="px-2 py-1 bg-[#B8860B]/10 hover:bg-[#B8860B]/20 border border-[#B8860B]/50 text-[#B8860B] rounded cursor-pointer text-[10px] font-mono transition-colors flex items-center gap-1 shadow-[0_0_10px_rgba(212,160,23,0.2)] whitespace-nowrap" title="Unlock features via PIN">
-        <span>🔓</span> <span className="hidden md:inline font-bold uppercase tracking-widest text-[9px]">Unlock</span>
-      </button>
-
+      {/* Desktop-only Reset Button */}
       {hasData && (
-        <button onClick={onReset} className="hidden sm:block self-end bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[11px] uppercase tracking-widest font-mono transition-colors ml-1">
+        <button onClick={onReset} className="hidden sm:block bg-transparent border border-[#1E293B] text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[11px] uppercase tracking-widest font-mono ml-1">
           New Scan
         </button>
       )}
@@ -2020,7 +2023,7 @@ export default function App() {
         </div>
       )}
 
-      <TopNav useFinnhub={useFinnhub} setUseFinnhub={setUseFinnhub} geminiKey={geminiKey} setGeminiKey={setGeminiKey} finnhubKey={finnhubKey} setFinnhubKey={setFinnhubKey} hasData={parsed || streamText || loading || error || unlucky} onReset={reset} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} isLoggedIn={isLoggedIn} username={username} onLoginClick={() => setShowLoginModal(true)} onLogout={handleLogout} />
+      <TopNav useFinnhub={useFinnhub} setUseFinnhub={setUseFinnhub} geminiKey={geminiKey} setGeminiKey={setGeminiKey} finnhubKey={finnhubKey} setFinnhubKey={setFinnhubKey} hasData={parsed || streamText || loading || error || unlucky} onReset={reset} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} isUnlocked={isUnlocked} isLoggedIn={isLoggedIn} username={username} onLoginClick={() => setShowLoginModal(true)} onLogout={handleLogout} />
 
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
