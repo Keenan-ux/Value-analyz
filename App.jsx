@@ -596,20 +596,23 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
   return (
     <div 
       ref={containerRef}
-      className="flex items-center justify-center p-3 border-2 border-[#B8860B]/30 bg-[#B8860B]/5 rounded-lg cursor-ns-resize hover:border-[#B8860B] transition-colors relative touch-none select-none"
+      className="flex items-center justify-center py-1 sm:py-1.5 px-2 border border-[#B8860B]/30 bg-[#B8860B]/5 rounded-lg cursor-ns-resize hover:border-[#B8860B] transition-colors relative touch-none select-none"
       onMouseDown={handlePointerDown}
       onTouchStart={handlePointerDown}
       title="Scroll or Drag up/down to change"
     >
-      <div className="absolute inset-y-0 left-0 flex flex-col items-center justify-center pl-3 text-[#B8860B]/40 text-[10px] space-y-3 pointer-events-none">
+      <div className="absolute inset-y-0 left-0 flex flex-col items-center justify-center pl-2 text-[#B8860B]/40 text-[7px] sm:text-[8px] space-y-0.5 pointer-events-none">
         <span>▲</span>
         <span>▼</span>
       </div>
-      <div className="text-3xl font-mono font-bold text-[#B8860B]">
+      <div className="text-lg sm:text-xl font-mono font-bold text-[#B8860B]">
         {value}
       </div>
-      <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-[10px] font-mono text-[#B8860B]/60 pointer-events-none uppercase tracking-widest">
+      <div className="absolute inset-y-0 right-0 flex items-center pr-2 text-[7px] sm:text-[8px] font-mono text-[#B8860B]/60 pointer-events-none uppercase tracking-widest hidden sm:flex">
         {value === 1 ? 'Ticker' : 'Tickers'}
+      </div>
+      <div className="absolute inset-y-0 right-0 flex items-center pr-2 text-[7px] font-mono text-[#B8860B]/60 pointer-events-none uppercase tracking-widest sm:hidden">
+        {value === 1 ? 'Tk' : 'Tks'}
       </div>
     </div>
   );
@@ -631,15 +634,24 @@ const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnloc
       })}
     </div>
 
-    <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <span>⚙️</span> Autonomous Scan Length
+    <div className="mb-6 p-2.5 sm:p-3 bg-[#111827] border border-[#1E293B] rounded-xl shadow-sm flex items-center justify-between gap-2 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 pl-1 sm:pl-2 shrink-0">
+        <label className="text-[10px] sm:text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+          <span>⚙️</span> Auto-Scan
         </label>
-        <span className="text-[10px] text-slate-500 font-mono">Scroll or drag to adjust</span>
+        <span className="text-[8px] text-slate-500 font-mono hidden sm:inline">&mdash; Drag to adjust length</span>
       </div>
-      <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={isUnlocked ? 100 : 10} />
-      {!isUnlocked && <button onClick={onUnlockClick} className="block w-full text-right text-[10px] text-[#B8860B] mt-2 font-mono uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-none p-0 transition-all">🔒 Locked: Max 10 (Click to Unlock)</button>}
+      
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="w-[85px] sm:w-[130px]">
+          <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={isUnlocked ? 100 : 10} />
+        </div>
+        {!isUnlocked && (
+          <button onClick={onUnlockClick} className="text-[#B8860B] text-[10px] sm:text-xs p-1 cursor-pointer bg-transparent border-none hover:scale-110 transition-transform pr-1 sm:pr-2 flex flex-col items-center" title="Unlock Max 100">
+            <span>🔒</span>
+          </button>
+        )}
+      </div>
     </div>
 
     <div className="mt-6 bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-left shadow-lg">
