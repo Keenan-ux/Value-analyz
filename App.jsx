@@ -1108,6 +1108,38 @@ const ChatBubble = ({ geminiKey }) => {
   const [activePrompt, setActivePrompt] = useState(null);
   const messagesEndRef = useRef(null);
 
+  const renderMessageText = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, lineIndex, arr) => {
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      
+      while ((match = linkRegex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(line.substring(lastIndex, match.index));
+        }
+        parts.push(
+          <a key={`link-${lineIndex}-${match.index}`} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-[#D4A017] hover:text-[#B8860B] font-semibold underline underline-offset-4 break-none transition-colors">
+            {match[1]}
+          </a>
+        );
+        lastIndex = linkRegex.lastIndex;
+      }
+      if (lastIndex < line.length) {
+        parts.push(line.substring(lastIndex));
+      }
+      
+      return (
+        <span key={`line-${lineIndex}`}>
+          {parts}
+          {lineIndex < arr.length - 1 && <br />}
+        </span>
+      );
+    });
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -1205,7 +1237,7 @@ const ChatBubble = ({ geminiKey }) => {
             )}
             {messages.map((m, i) => (
               <div key={i} className={`max-w-[85%] rounded-xl p-3 text-[13px] leading-relaxed ${m.role === 'user' ? 'bg-[#D4A017]/10 border border-[#D4A017]/20 text-slate-200 self-end rounded-tr-sm' : 'bg-[#111827] border border-[#1E293B] text-slate-300 self-start rounded-tl-sm'}`}>
-                {m.text}
+                {renderMessageText(m.text)}
               </div>
             ))}
             {isTyping && (
