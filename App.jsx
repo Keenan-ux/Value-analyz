@@ -1184,10 +1184,10 @@ const ChatBubble = ({ geminiKey }) => {
     <>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-[#D4A017] to-[#B8860B] rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(212,160,23,0.3)] hover:scale-110 transition-transform cursor-pointer z-[9999] border-none text-[#0A0E17]"
+        className={`fixed bottom-8 right-8 flex items-center justify-center transition-all cursor-pointer z-[9999] border-none ${isOpen ? 'w-14 h-14 bg-gradient-to-br from-[#D4A017] to-[#B8860B] rounded-full text-2xl shadow-[0_0_20px_rgba(212,160,23,0.3)] text-[#0A0E17] hover:scale-110' : 'w-20 h-20 bg-transparent hover:scale-105'}`}
         style={{ zIndex: 9999 }}
       >
-        {isOpen ? "✕" : "💬"}
+        {isOpen ? "✕" : <img src="/chat-icon.png" alt="Chat AI" className="w-full h-full object-contain mix-blend-screen opacity-80 hover:opacity-100 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-opacity" />}
       </button>
 
       {isOpen && (
