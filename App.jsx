@@ -429,21 +429,6 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
     </div>
     
     <div className="flex items-center gap-4">
-      {/* Cloud Auth Section Moved Here */}
-      <div className="flex items-center gap-3 border-r border-[#1E293B] pr-4 mr-1 hidden sm:flex">
-        {isLoggedIn ? (
-          <div className="flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-lg border border-[#1E293B] shadow-inner">
-            <span className="text-[#D4A017] text-sm">🟢</span>
-            <div className="text-slate-200 font-mono text-[11px] font-bold tracking-wider">{username}</div>
-            <button onClick={onLogout} className="text-[10px] font-mono text-slate-500 hover:text-red-400 ml-2 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Logout</button>
-          </div>
-        ) : (
-          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-slate-700 text-slate-300 font-mono text-[11px] uppercase tracking-widest py-1.5 px-4 rounded-md cursor-pointer transition-colors shadow-sm">
-            Sign In / Register
-          </button>
-        )}
-      </div>
-
       <div className="flex items-center gap-2 mr-2">
         <button onClick={() => setUseFinnhub(!useFinnhub)} className={`relative w-11 h-6 rounded-full border-none cursor-pointer transition-colors duration-300 p-0 ${useFinnhub ? 'bg-green-500' : 'bg-slate-700'}`}>
           <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all duration-300 ease-in-out ${useFinnhub ? 'left-[22px]' : 'left-0.5'}`} />
@@ -557,9 +542,22 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
   );
 };
 
-const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick }) => (
+const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
-    <div className="text-center mb-10">
+    <div className="text-center mb-10 relative">
+      <div className="absolute top-0 right-0 hidden sm:flex">
+        {isLoggedIn ? (
+          <div className="flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-lg border border-[#1E293B] shadow-inner">
+            <span className="text-[#D4A017] text-sm">🟢</span>
+            <div className="text-slate-200 font-mono text-[11px] font-bold tracking-wider">{username}</div>
+            <button onClick={onLogout} className="text-[10px] font-mono text-slate-500 hover:text-red-400 ml-2 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Logout</button>
+          </div>
+        ) : (
+          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#D4A017]/50 text-[#D4A017] font-mono text-[11px] uppercase tracking-widest py-1.5 px-4 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)]">
+            Sign In / Register
+          </button>
+        )}
+      </div>
       <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
       <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
         Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
@@ -1721,7 +1719,7 @@ export default function App() {
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
           <>
-            <WelcomeScreen setMode={setMode} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />
+            <WelcomeScreen setMode={setMode} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} isLoggedIn={isLoggedIn} username={username} onLoginClick={() => setShowLoginModal(true)} onLogout={handleLogout} />
             <div className="flex justify-center gap-4 mb-4 mt-6">
                <button onClick={() => setShowEtfs(false)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${!showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>Stocks</button>
                <button onClick={() => setShowEtfs(true)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>ETFs Tracker</button>
