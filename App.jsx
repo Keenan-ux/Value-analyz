@@ -466,9 +466,9 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
   <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-4 sm:px-7 py-3 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-3 sm:gap-0">
     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
       <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
-        <div>
+        <div className="flex flex-row sm:flex-col items-baseline sm:items-start gap-2 sm:gap-0">
           <div className="text-[18px] font-light tracking-tight text-slate-200 leading-none">Booth <span className="text-[#B8860B] font-semibold">Check</span></div>
-          <div className="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">
+          <div className="text-[9px] text-slate-500 font-mono tracking-widest uppercase sm:mt-1">
             <span className="hidden sm:inline">Powered by the Chicago Booth methodology</span>
             <span className="sm:hidden">Chicago Booth Protocol</span>
           </div>
@@ -614,18 +614,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 
 const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
-    <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg mt-2">
-      <div className="flex justify-between items-center mb-4">
-        <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <span>⚙️</span> Autonomous Scan Length
-        </label>
-        <span className="text-[10px] text-slate-500 font-mono">Scroll or drag to adjust</span>
-      </div>
-      <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={isUnlocked ? 100 : 10} />
-      {!isUnlocked && <button onClick={onUnlockClick} className="block w-full text-right text-[10px] text-[#B8860B] mt-2 font-mono uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-none p-0 transition-all">🔒 Locked: Max 10 (Click to Unlock)</button>}
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-2">
       {MODES.map(o => {
         return (
           <button key={o.id} onClick={() => setMode(o.id)} className={`w-full glass-button rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-start gap-2 group hover:-translate-y-1 transition-all border ${o.borderClass} ${o.shadowClass}`}>
@@ -637,6 +626,17 @@ const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnloc
           </button>
         );
       })}
+    </div>
+
+    <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
+      <div className="flex justify-between items-center mb-4">
+        <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <span>⚙️</span> Autonomous Scan Length
+        </label>
+        <span className="text-[10px] text-slate-500 font-mono">Scroll or drag to adjust</span>
+      </div>
+      <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={isUnlocked ? 100 : 10} />
+      {!isUnlocked && <button onClick={onUnlockClick} className="block w-full text-right text-[10px] text-[#B8860B] mt-2 font-mono uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-none p-0 transition-all">🔒 Locked: Max 10 (Click to Unlock)</button>}
     </div>
 
     <div className="mt-6 bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-left shadow-lg">
