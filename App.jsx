@@ -541,7 +541,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
   );
 };
 
-const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLength, isUnlocked, onUnlockClick }) => (
+const WelcomeScreen = ({ setMode, username, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
       <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
@@ -578,16 +578,25 @@ const WelcomeScreen = ({ setMode, username, setUsername, scanLength, setScanLeng
       })}
     </div>
     
-    <div className="mt-8 flex items-center justify-between p-4 px-6 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
+    <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 px-6 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg gap-4">
       <div className="flex items-center gap-4">
-        <span className="text-3xl">👤</span>
+        <span className="text-3xl">{isLoggedIn ? "🟢" : "👤"}</span>
         <div>
-          <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Analyst Profile</label>
-          <input type="text" value={username} onChange={e => setUsername(e.target.value)} maxLength={20} className="bg-transparent border-b border-brand-border focus:border-[#D4A017] text-slate-200 text-sm font-semibold outline-none py-1 w-40 placeholder-slate-600 transition-colors" placeholder="Anonymous User" />
+          <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Analyst Account</label>
+          {isLoggedIn ? (
+            <div className="text-slate-200 font-bold text-lg">{username}</div>
+          ) : (
+             <div className="text-slate-400 text-sm italic">Not signed in</div>
+          )}
         </div>
       </div>
-      <div className="text-[10px] text-slate-500 font-mono text-right max-w-[150px]">
-        Scores are posted to the Global Leaderboard
+      <div className="flex flex-col items-end gap-2 text-right">
+        {isLoggedIn ? (
+          <button onClick={onLogout} className="text-xs font-mono text-red-500/80 hover:text-red-400 transition-colors cursor-pointer bg-[#0A0E17] border border-red-500/30 px-3 py-1.5 rounded-md">Sign Out</button>
+        ) : (
+          <button onClick={onLoginClick} className="bg-gradient-to-r from-[#D4A017] to-[#B8860B] text-[#0A0E17] font-semibold py-1.5 px-6 rounded-md text-sm cursor-pointer hover:opacity-90 transition-opacity whitespace-nowrap">Sign In / Register</button>
+        )}
+        <div className="text-[9px] text-slate-500 font-mono">Cloud Sync {isLoggedIn ? 'Active' : 'Disabled'}</div>
       </div>
     </div>
 
@@ -1111,6 +1120,16 @@ export default function App() {
   const [assetType, setAssetType] = useState("stock");
   const [customEtfCount, setCustomEtfCount] = useState(10);
   
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try { return localStorage.getItem("value_analyst_logged_in") === "true"; }
+    catch (e) { return false; }
+  });
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  
   const [username, setUsername] = useState(() => {
     try { return localStorage.getItem("value_analyst_username") || ""; }
     catch (e) { return ""; }
@@ -1120,6 +1139,42 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("value_analyst_watchlist")) || []; }
     catch (e) { return []; }
   });
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: authPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Authentication failed");
+      
+      setIsLoggedIn(true);
+      localStorage.setItem("value_analyst_username", data.username);
+      localStorage.setItem("value_analyst_logged_in", "true");
+      if (data.watchlist) setWatchlist(data.watchlist); // Cloud sync pull
+      setShowLoginModal(false);
+      setAuthPassword("");
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUsername("");
+    setAuthPassword("");
+    setWatchlist([]);
+    localStorage.removeItem("value_analyst_username");
+    localStorage.removeItem("value_analyst_logged_in");
+  };
 
   const [leaderboard, setLeaderboard] = useState([]);
   const [etfLeaderboard, setEtfLeaderboard] = useState([]);
@@ -1574,9 +1629,29 @@ export default function App() {
   const currentTicker = parsed ? (parseKV(parsed.HEADER).TICKER || ticker.toUpperCase()) : "";
   const isSaved = watchlist.some(w => w.ticker === currentTicker);
   const toggleWatchlist = () => {
-    if (isSaved) setWatchlist(w => w.filter(i => i.ticker !== currentTicker));
-    else setWatchlist(w => [{ ticker: currentTicker, company: lq?.company || parseKV(parsed?.HEADER)?.COMPANY || currentTicker, verdict: parsed?.VERDICT, price: lq ? `$${lq.price.toFixed(2)}` : parseKV(parsed?.HEADER)?.CURRENT_PRICE, timestamp: Date.now(), rawResult, lq }, ...w]);
+    let newWatchlist = [];
+    if (isSaved) {
+      newWatchlist = watchlist.filter(i => i.ticker !== currentTicker);
+      setWatchlist(newWatchlist);
+    } else {
+      newWatchlist = [{ ticker: currentTicker, company: lq?.company || parseKV(parsed?.HEADER)?.COMPANY || currentTicker, verdict: parsed?.VERDICT, price: lq ? `$${lq.price.toFixed(2)}` : parseKV(parsed?.HEADER)?.CURRENT_PRICE, timestamp: Date.now(), rawResult, lq }, ...watchlist];
+      setWatchlist(newWatchlist);
+    }
+    
+    // Auto-sync to Vercel KV cloud if logged in
+    if (isLoggedIn && username) {
+      fetch('/api/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, watchlist: newWatchlist })
+      }).catch(e => console.log("Cloud sync failed:", e));
+    }
   };
+
+  // Keep local storage up to date as a fallback
+  useEffect(() => {
+    localStorage.setItem("value_analyst_watchlist", JSON.stringify(watchlist));
+  }, [watchlist]);
   
   // Changed: No longer loads raw result from memory, instead triggers a fresh live analysis
   const handleHistorySelect = (item) => { 
@@ -1612,12 +1687,47 @@ export default function App() {
         </div>
       )}
 
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="glass-panel p-8 rounded-2xl max-w-sm w-full outline outline-1 outline-[#1E293B] shadow-2xl relative bg-[#0A0E17]">
+            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 bg-transparent border-none cursor-pointer text-xl">✕</button>
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-4">💳</div>
+              <h3 className="text-xl font-semibold text-slate-200 m-0 mb-2">Cloud Synced Account</h3>
+              <p className="text-sm text-slate-400 m-0">Securely sync your watchlists and scores to the global cloud.</p>
+            </div>
+            
+            <div className="flex rounded-lg bg-[#111827] p-1 mb-5">
+               <button onClick={() => {setAuthMode("login"); setAuthError("");}} className={`flex-1 text-xs py-2 rounded-md font-mono transition-colors ${authMode==="login"?'bg-[#D4A017] text-[#0A0E17] font-bold':'text-slate-400 hover:text-slate-200 cursor-pointer'}`}>SIGN IN</button>
+               <button onClick={() => {setAuthMode("register"); setAuthError("");}} className={`flex-1 text-xs py-2 rounded-md font-mono transition-colors ${authMode==="register"?'bg-[#D4A017] text-[#0A0E17] font-bold':'text-slate-400 hover:text-slate-200 cursor-pointer'}`}>REGISTER</button>
+            </div>
+
+            <form onSubmit={handleAuthSubmit}>
+              <div className="mb-4">
+                <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Username</label>
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} required minLength={3} className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#D4A017] text-slate-200 px-4 py-3 rounded-xl text-sm outline-none" placeholder="analyst_01" />
+              </div>
+              <div className="mb-4">
+                <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Password</label>
+                <input type="password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required minLength={6} className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#D4A017] text-slate-200 px-4 py-3 rounded-xl text-sm outline-none" placeholder="••••••" />
+              </div>
+              
+              {authError && <div className="text-red-500 text-xs text-center mb-4">{authError}</div>}
+              
+              <button type="submit" disabled={authLoading} className="w-full bg-gradient-to-r from-[#D4A017] to-[#B8860B] text-[#0A0E17] font-semibold py-3 rounded-xl cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50">
+                {authLoading ? "Processing..." : authMode === "login" ? "Secure Login" : "Create Profile"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <TopNav useFinnhub={useFinnhub} setUseFinnhub={setUseFinnhub} geminiKey={geminiKey} setGeminiKey={setGeminiKey} finnhubKey={finnhubKey} setFinnhubKey={setFinnhubKey} hasData={parsed || streamText || loading || error || unlucky} onReset={reset} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />
 
       <main className="max-w-[900px] mx-auto py-8 px-5">
         {!mode && !loading && !parsed && !streamText && !error && !unlucky && (
           <>
-            <WelcomeScreen setMode={setMode} username={username} setUsername={setUsername} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />
+            <WelcomeScreen setMode={setMode} username={username} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} isLoggedIn={isLoggedIn} onLoginClick={() => setShowLoginModal(true)} onLogout={handleLogout} />
             <div className="flex justify-center gap-4 mb-4 mt-6">
                <button onClick={() => setShowEtfs(false)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${!showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>Stocks</button>
                <button onClick={() => setShowEtfs(true)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>ETFs Tracker</button>
