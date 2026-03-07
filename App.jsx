@@ -1276,10 +1276,16 @@ const ChatBubble = ({ geminiKey }) => {
     <>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-8 right-8 flex items-center justify-center transition-all cursor-pointer z-[9999] border-none ${isOpen ? 'w-14 h-14 bg-gradient-to-br from-[#B8860B] to-[#B8860B] rounded-full text-2xl shadow-[0_0_20px_rgba(212,160,23,0.3)] text-[#0A0E17] hover:scale-110' : 'w-20 h-20 bg-transparent hover:scale-105'}`}
+        className={`fixed flex items-center justify-center transition-all cursor-pointer z-[9999] border-none outline-none ${isOpen ? 'bottom-6 right-6 w-12 h-12 bg-gradient-to-br from-[#B8860B] to-[#B8860B] rounded-full text-xl shadow-[0_0_20px_rgba(212,160,23,0.3)] text-[#0A0E17] hover:scale-110' : 'bottom-2 right-2 p-3 bg-transparent hover:scale-110'}`}
         style={{ zIndex: 9999 }}
+        title="Chat Assistant"
       >
-        {isOpen ? "✕" : <img src="/chat-icon.png" alt="Chat AI" className="w-full h-full object-contain mix-blend-screen opacity-80 hover:opacity-100 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-opacity" />}
+        {isOpen ? "✕" : (
+          <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60"></span>
+            <span className="relative inline-flex rounded-full h-full w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+          </span>
+        )}
       </button>
 
       {isOpen && (
