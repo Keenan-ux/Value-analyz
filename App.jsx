@@ -1092,12 +1092,20 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
 };
 
 
+const QUICK_PROMPTS = [
+  { id: "10q", icon: "📄", label: "Find 10-Q SEC Filing", prefix: "Can you find the latest SEC 10-Q filing link for " },
+  { id: "etf", icon: "📊", label: "Yahoo ETF Holdings", prefix: "Find the direct link to the Yahoo Finance holdings page for the ETF " },
+  { id: "earn", icon: "🎙️", label: "Earnings Transcript", prefix: "What are the most recent earnings transcript highlights for " },
+  { id: "eval", icon: "🎓", label: "Explain Protocol", prefix: "Summarize the Chicago Booth valuation methodology used in this app.", instant: true }
+];
+
 // ─── AI CHAT COMPONENT ───
 const ChatBubble = ({ geminiKey }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [activePrompt, setActivePrompt] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -1108,24 +1116,20 @@ const ChatBubble = ({ geminiKey }) => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    
+  const processQuery = async (queryText) => {
     if (!geminiKey && RUNTIME_API_KEY === "") {
       setMessages(prev => [...prev, { role: "assistant", text: "Please enter your Gemini API Key in the top right to use the chat." }]);
       return;
     }
-
     const activeGeminiKey = geminiKey ? geminiKey.trim() : RUNTIME_API_KEY;
-    const userMsg = input.trim();
-    setInput("");
-    const newMessages = [...messages, { role: "user", text: userMsg }];
+    const newMessages = [...messages, { role: "user", text: queryText }];
     setMessages(newMessages);
     setIsTyping(true);
+    setInput("");
+    setActivePrompt(null);
 
     try {
-      const prompt = newMessages.map(m => `${m.role === "user" ? "User" : "AI"}: ${m.text}`).join("\n") + "\nUser: " + userMsg + "\nAI:";
+      const prompt = newMessages.map(m => `${m.role === "user" ? "User" : "AI"}: ${m.text}`).join("\n") + "\nUser: " + queryText + "\nAI:";
       const sysPrompt = "You are a helpful AI assistant for the Value Analyst tool. Provide concise, accurate answers, structural analysis insights, or links if asked.";
       const res = await callGemini(prompt, sysPrompt, activeGeminiKey);
       setMessages(prev => [...prev, { role: "assistant", text: res }]);
@@ -1134,6 +1138,14 @@ const ChatBubble = ({ geminiKey }) => {
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim() && !activePrompt?.instant) return;
+    const fullText = activePrompt ? `${activePrompt.prefix}${input.trim()}` : input.trim();
+    if (!fullText) return;
+    await processQuery(fullText);
   };
 
   return (
@@ -1163,30 +1175,31 @@ const ChatBubble = ({ geminiKey }) => {
                   Ask Gemini for research links, concepts, or quick analysis...
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center px-2">
-                  <button 
-                    onClick={() => setInput("Can you find the latest SEC 10-Q filing link for ")}
-                    className="bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/30 text-[#D4A017] text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
-                  >
-                    📄 Find 10-Q SEC Filing
-                  </button>
-                  <button 
-                    onClick={() => setInput("Find the direct link to the Yahoo Finance holdings page for the ETF ")}
-                    className="bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/30 text-[#D4A017] text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
-                  >
-                    📊 Yahoo ETF Holdings
-                  </button>
-                  <button 
-                    onClick={() => setInput("What are the most recent earnings transcript highlights for ")}
-                    className="bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/30 text-[#D4A017] text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
-                  >
-                    🎙️ Earnings Transcript
-                  </button>
-                  <button 
-                    onClick={() => setInput("Summarize the Chicago Booth valuation methodology used in this app.")}
-                    className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
-                  >
-                    🎓 Explain Protocol
-                  </button>
+                  {QUICK_PROMPTS.map(p => {
+                    const isActive = activePrompt?.id === p.id;
+                    if (activePrompt && !isActive) return null; // hide others
+                    
+                    return (
+                      <button 
+                        key={p.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setActivePrompt(null);
+                          } else {
+                            if (p.instant) {
+                              processQuery(p.prefix);
+                            } else {
+                              setActivePrompt(p);
+                              setInput("");
+                            }
+                          }
+                        }}
+                        className={`text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-all text-left border ${isActive ? 'bg-[#D4A017] text-[#0A0E17] border-[#D4A017] scale-105 shadow-[0_0_10px_rgba(212,160,23,0.4)] font-bold' : 'bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border-[#D4A017]/30 text-[#D4A017]'}`}
+                      >
+                        {p.icon} {p.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1205,15 +1218,21 @@ const ChatBubble = ({ geminiKey }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSend} className="p-3 bg-[#111827] border-t border-[#1E293B] flex gap-2">
+          <form onSubmit={handleSend} className="p-3 bg-[#111827] border-t border-[#1E293B] flex gap-2 relative">
+            {activePrompt && !activePrompt.instant && (
+              <div className="absolute -top-6 left-3 bg-[#D4A017] text-[#0A0E17] text-[9px] font-mono font-bold px-2 py-0.5 rounded-t-md flex items-center gap-2 shadow-[0_-4px_10px_rgba(212,160,23,0.15)] z-10">
+                {activePrompt.icon} {activePrompt.label}
+                <button type="button" onClick={() => setActivePrompt(null)} className="bg-transparent border-none text-[#0A0E17]/60 hover:text-[#0A0E17] cursor-pointer p-0 ml-1">✕</button>
+              </div>
+            )}
             <input 
               type="text" 
               value={input} 
               onChange={e => setInput(e.target.value)} 
-              placeholder="Ask anything or click a prompt..." 
-              className="flex-1 bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none transition-colors"
+              placeholder={activePrompt ? `Enter ticker for ${activePrompt.label}...` : "Ask anything or click a prompt..."}
+              className={`flex-1 bg-[#0A0E17] border focus:border-[#D4A017] rounded-lg px-3 py-2 text-sm outline-none transition-colors relative z-20 ${activePrompt ? 'border-[#D4A017] text-[#D4A017] font-mono font-bold' : 'border-[#1E293B] text-slate-200'}`}
             />
-            <button type="submit" disabled={isTyping || !input.trim()} className="bg-[#D4A017] text-[#0A0E17] rounded-lg px-4 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#B8860B] transition-colors border-none font-bold">
+            <button type="submit" disabled={isTyping || (!input.trim() && !activePrompt?.instant)} className="bg-[#D4A017] text-[#0A0E17] rounded-lg px-4 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#B8860B] transition-colors border-none font-bold relative z-20">
               ➤
             </button>
           </form>
