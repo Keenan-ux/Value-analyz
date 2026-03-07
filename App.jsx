@@ -428,27 +428,42 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
       </div>
     </div>
     
-    <div className="flex items-center gap-4">
-      <div className="flex items-center gap-2 mr-2">
-        <button onClick={() => setUseFinnhub(!useFinnhub)} className={`relative w-11 h-6 rounded-full border-none cursor-pointer transition-colors duration-300 p-0 ${useFinnhub ? 'bg-green-500' : 'bg-slate-700'}`}>
-          <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all duration-300 ease-in-out ${useFinnhub ? 'left-[22px]' : 'left-0.5'}`} />
+    <div className="flex items-center gap-1.5 md:gap-3">
+      {/* Cloud Auth Section In Header */}
+      <div className="flex items-center gap-2 border-r border-[#1E293B] pr-2 mr-1 hidden sm:flex">
+        {isLoggedIn ? (
+          <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-lg border border-[#1E293B] shadow-inner">
+            <span className="text-[#D4A017] text-xs">🟢</span>
+            <div className="text-slate-200 font-mono text-[10px] font-bold tracking-wider">{username}</div>
+            <button onClick={onLogout} className="text-[9px] font-mono text-slate-500 hover:text-red-400 ml-1 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Log out</button>
+          </div>
+        ) : (
+          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#D4A017]/50 text-[#D4A017] font-mono text-[10px] uppercase tracking-widest py-1 px-3 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)]">
+            Sign In
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-0.5 hidden xl:flex">
+        <label className="text-[8px] text-slate-400 font-mono uppercase">Gemini</label>
+        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+      </div>
+
+      <div className="flex flex-col gap-0.5 hidden xl:flex mr-2">
+        <label className="text-[8px] text-slate-400 font-mono uppercase">Finnhub</label>
+        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+      </div>
+
+      <div className="flex items-center gap-1.5 mr-1 bg-[#111827] px-2 py-1 rounded-md border border-[#1E293B]">
+        <button onClick={() => setUseFinnhub(!useFinnhub)} className={`relative w-8 h-4 rounded-full border-none cursor-pointer transition-colors duration-300 p-0 ${useFinnhub ? 'bg-green-500' : 'bg-slate-700'}`}>
+          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-300 ease-in-out ${useFinnhub ? 'left-[18px]' : 'left-0.5'}`} />
         </button>
-        <span className={`text-[10px] font-mono w-24 uppercase tracking-widest ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Live Data" : "Web Search"}</span>
+        <span className={`text-[9px] font-mono w-16 uppercase tracking-widest leading-none ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Live" : "Web"}</span>
       </div>
 
-      <button onClick={onUnlockClick} className="mr-2 px-3 py-1.5 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-[11px] font-mono transition-colors flex items-center gap-1.5 shadow-[0_0_10px_rgba(212,160,23,0.2)]" title="Unlock features via PIN">
-        <span>🔓</span> <span className="hidden lg:inline font-bold uppercase tracking-widest">Unlock</span>
+      <button onClick={onUnlockClick} className="px-2 py-1 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-[10px] font-mono transition-colors flex items-center gap-1 shadow-[0_0_10px_rgba(212,160,23,0.2)] whitespace-nowrap" title="Unlock features via PIN">
+        <span>🔓</span> <span className="hidden md:inline font-bold uppercase tracking-widest text-[9px]">Unlock</span>
       </button>
-
-      <div className="flex flex-col gap-1 hidden md:flex">
-        <label className="text-[9px] text-slate-400 font-mono uppercase">Gemini Key</label>
-        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Google API..." className="w-24 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
-      </div>
-
-      <div className="flex flex-col gap-1 hidden md:flex">
-        <label className="text-[9px] text-slate-400 font-mono uppercase">Finnhub Key</label>
-        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Live Data API..." className="w-24 px-2 py-1.5 text-xs font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
-      </div>
 
       {hasData && (
         <button onClick={onReset} className="self-end bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[11px] uppercase tracking-widest font-mono transition-colors ml-2">
@@ -544,27 +559,11 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 
 const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
-    <div className="flex flex-col-reverse sm:flex-row items-center justify-between mb-10 gap-6">
-      <div className="text-center sm:text-left">
-        <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
-        <p className="text-slate-400 text-sm max-w-sm sm:max-w-lg leading-relaxed">
-          Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
-        </p>
-      </div>
-
-      <div className="flex w-full sm:w-auto justify-center sm:justify-end">
-        {isLoggedIn ? (
-          <div className="flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-lg border border-[#1E293B] shadow-inner">
-            <span className="text-[#D4A017] text-sm">🟢</span>
-            <div className="text-slate-200 font-mono text-[11px] font-bold tracking-wider">{username}</div>
-            <button onClick={onLogout} className="text-[10px] font-mono text-slate-500 hover:text-red-400 ml-2 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Logout</button>
-          </div>
-        ) : (
-          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#D4A017]/50 text-[#D4A017] font-mono text-[11px] uppercase tracking-widest py-2 sm:py-1.5 px-6 sm:px-4 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)] w-full sm:w-auto">
-            Sign In / Register
-          </button>
-        )}
-      </div>
+    <div className="text-center mb-10">
+      <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
+      <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
+        Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
+      </p>
     </div>
 
     <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
