@@ -230,7 +230,7 @@ const fetchFinnhubData = async (tk, key) => {
   }
 };
 
-const fetchETFHoldings = async (tk, key, geminiKey) => {
+const fetchETFHoldings = async (tk, key, geminiKey, expectedCount = 500) => {
   // Try Finnhub first if a key exists
   if (key && key.trim().length > 0) {
     const token = key.trim();
@@ -249,7 +249,7 @@ const fetchETFHoldings = async (tk, key, geminiKey) => {
   if (!geminiKey) throw new Error("Finnhub requires a premium key. No Gemini API key provided for the web search fallback.");
   
   console.log(`Using Gemini to scrape ETF holdings for ${tk}...`);
-  const prompt = `Search the web for the official current holdings of the ETF ticker ${tk}. Process the top constituents. Return ONLY a raw JSON array of objects. Each object must have exactly two keys: "symbol" (the stock ticker string) and "percent" (the exact weight percentage as a number, e.g. 6.54 for 6.54%). Do not include any HTML, markdown formatting, backticks, or other text. Sort them from highest percent to lowest percent.`;
+  const prompt = `Search the web for the official current holdings of the ETF ticker ${tk}. Process the top ${expectedCount} constituents. Return ONLY a raw JSON array of objects. Each object must have exactly two keys: "symbol" (the stock ticker string) and "percent" (the exact weight percentage as a number, e.g. 6.54 for 6.54%). Do not include any HTML, markdown formatting, backticks, or other text. Sort them from highest percent to lowest percent.`;
   const sysPrompt = "You are a precise JSON extractor. Output ONLY the raw JSON array. Start with [ and end with ]. No other text.";
   
   try {
@@ -1092,6 +1092,109 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
 };
 
 
+// ─── AI CHAT COMPONENT ───
+const ChatBubble = ({ geminiKey }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    
+    if (!geminiKey && RUNTIME_API_KEY === "") {
+      setMessages(prev => [...prev, { role: "assistant", text: "Please enter your Gemini API Key in the top right to use the chat." }]);
+      return;
+    }
+
+    const activeGeminiKey = geminiKey ? geminiKey.trim() : RUNTIME_API_KEY;
+    const userMsg = input.trim();
+    setInput("");
+    const newMessages = [...messages, { role: "user", text: userMsg }];
+    setMessages(newMessages);
+    setIsTyping(true);
+
+    try {
+      const prompt = newMessages.map(m => `${m.role === "user" ? "User" : "AI"}: ${m.text}`).join("\n") + "\nUser: " + userMsg + "\nAI:";
+      const sysPrompt = "You are a helpful AI assistant for the Value Analyst tool. Provide concise, accurate answers, structural analysis insights, or links if asked.";
+      const res = await callGemini(prompt, sysPrompt, activeGeminiKey);
+      setMessages(prev => [...prev, { role: "assistant", text: res }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: "assistant", text: "Error: " + err.message }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  return (
+    <>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-[#D4A017] to-[#B8860B] rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(212,160,23,0.3)] hover:scale-110 transition-transform cursor-pointer z-[9999] border-none text-[#0A0E17]"
+        style={{ zIndex: 9999 }}
+      >
+        {isOpen ? "✕" : "💬"}
+      </button>
+
+      {isOpen && (
+        <div className="fixed bottom-24 right-6 w-[340px] sm:w-[400px] bg-[#0A0E17] border border-[#1E293B] rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-[fadeIn_0.2s_ease]">
+          <div className="bg-[#111827] border-b border-[#1E293B] p-4 flex items-center gap-3">
+            <span className="text-xl">✨</span>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200 m-0">Gemini Assistant</h3>
+              <p className="text-[10px] text-slate-500 font-mono tracking-widest uppercase m-0 mt-0.5">Direct API Query</p>
+            </div>
+          </div>
+          
+          <div className="flex-1 p-4 overflow-y-auto h-80 flex flex-col gap-3 custom-scrollbar bg-[#0A0E17]/50">
+            {messages.length === 0 && (
+              <div className="text-center text-xs text-slate-500 font-mono italic my-auto px-4 leading-relaxed">
+                Ask Gemini for research links, concepts, or quick analysis...
+              </div>
+            )}
+            {messages.map((m, i) => (
+              <div key={i} className={`max-w-[85%] rounded-xl p-3 text-[13px] leading-relaxed ${m.role === 'user' ? 'bg-[#D4A017]/10 border border-[#D4A017]/20 text-slate-200 self-end rounded-tr-sm' : 'bg-[#111827] border border-[#1E293B] text-slate-300 self-start rounded-tl-sm'}`}>
+                {m.text}
+              </div>
+            ))}
+            {isTyping && (
+              <div className="bg-[#111827] border border-[#1E293B] text-slate-400 rounded-xl p-3 text-[13px] max-w-[85%] self-start rounded-tl-sm flex gap-1 items-center">
+                <span className="w-1.5 h-1.5 bg-[#D4A017] rounded-full animate-bounce"></span>
+                <span className="w-1.5 h-1.5 bg-[#D4A017] rounded-full animate-bounce delay-75"></span>
+                <span className="w-1.5 h-1.5 bg-[#D4A017] rounded-full animate-bounce delay-150"></span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form onSubmit={handleSend} className="p-3 bg-[#111827] border-t border-[#1E293B] flex gap-2">
+            <input 
+              type="text" 
+              value={input} 
+              onChange={e => setInput(e.target.value)} 
+              placeholder="Ask anything..." 
+              className="flex-1 bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none transition-colors"
+            />
+            <button type="submit" disabled={isTyping || !input.trim()} className="bg-[#D4A017] text-[#0A0E17] rounded-lg px-3 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#B8860B] transition-colors border-none">
+              ➤
+            </button>
+          </form>
+        </div>
+      )}
+    </>
+  );
+};
+
 // ─── MAIN APPLICATION COMPONENT ───
 export default function App() {
   const [mode, setMode] = useState(null);
@@ -1297,7 +1400,8 @@ export default function App() {
     try {
       if (isTargeted && assetType === "etf") {
         setStatusMsg(`Fetching full holdings for ETF ${tk}...\n(Attempting Finnhub, fallback to Gemini Web Search)`);
-        const holdingsRaw = await fetchETFHoldings(tk, finnhubKey, activeGeminiKey);
+        const expectedCount = etfDepth === "exhaustive" ? 500 : (etfDepth === "deep" ? 100 : (etfDepth === "custom" ? customEtfCount : 20));
+        const holdingsRaw = await fetchETFHoldings(tk, finnhubKey, activeGeminiKey, expectedCount);
         
         let holdings = holdingsRaw.sort((a,b) => (b.percent || 0) - (a.percent || 0));
         
@@ -1798,6 +1902,8 @@ export default function App() {
         {streamText && !parsed && !loading && <div className="animate-[fadeIn_0.5s_ease]"><Section title="Analysis Results" icon="📄"><pre className="whitespace-pre-wrap font-mono text-[13px] leading-relaxed">{streamText}</pre></Section></div>}
         {parsed && !loading && <AnalysisResults parsed={parsed} lq={lq} rawResult={rawResult} currentTicker={currentTicker} isSaved={isSaved} toggleWatchlist={toggleWatchlist} live={!!lq} useFinnhub={useFinnhub} />}
       </main>
+      
+      <ChatBubble geminiKey={geminiKey} />
     </div>
   );
 }
