@@ -569,9 +569,9 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
-      <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
+      <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">Booth <span className="text-[#D4A017] font-semibold">Check</span></h1>
       <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
-        Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
+        AI Value Analyst - Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
       </p>
     </div>
 
