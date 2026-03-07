@@ -1158,8 +1158,36 @@ const ChatBubble = ({ geminiKey }) => {
           
           <div className="flex-1 p-4 overflow-y-auto h-80 flex flex-col gap-3 custom-scrollbar bg-[#0A0E17]/50">
             {messages.length === 0 && (
-              <div className="text-center text-xs text-slate-500 font-mono italic my-auto px-4 leading-relaxed">
-                Ask Gemini for research links, concepts, or quick analysis...
+              <div className="flex flex-col h-full justify-center opacity-80 transition-opacity hover:opacity-100">
+                <div className="text-center text-xs text-slate-400 font-mono italic px-4 leading-relaxed mb-6">
+                  Ask Gemini for research links, concepts, or quick analysis...
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center px-2">
+                  <button 
+                    onClick={() => setInput("Can you find the latest SEC 10-Q filing link for ")}
+                    className="bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/30 text-[#D4A017] text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
+                  >
+                    📄 Find 10-Q SEC Filing
+                  </button>
+                  <button 
+                    onClick={() => setInput("Find the direct link to the Yahoo Finance holdings page for the ETF ")}
+                    className="bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/30 text-[#D4A017] text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
+                  >
+                    📊 Yahoo ETF Holdings
+                  </button>
+                  <button 
+                    onClick={() => setInput("What are the most recent earnings transcript highlights for ")}
+                    className="bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/30 text-[#D4A017] text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
+                  >
+                    🎙️ Earnings Transcript
+                  </button>
+                  <button 
+                    onClick={() => setInput("Summarize the Chicago Booth valuation methodology used in this app.")}
+                    className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-colors text-left"
+                  >
+                    🎓 Explain Protocol
+                  </button>
+                </div>
               </div>
             )}
             {messages.map((m, i) => (
@@ -1182,10 +1210,10 @@ const ChatBubble = ({ geminiKey }) => {
               type="text" 
               value={input} 
               onChange={e => setInput(e.target.value)} 
-              placeholder="Ask anything..." 
+              placeholder="Ask anything or click a prompt..." 
               className="flex-1 bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded-lg px-3 py-2 text-sm text-slate-200 outline-none transition-colors"
             />
-            <button type="submit" disabled={isTyping || !input.trim()} className="bg-[#D4A017] text-[#0A0E17] rounded-lg px-3 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#B8860B] transition-colors border-none">
+            <button type="submit" disabled={isTyping || !input.trim()} className="bg-[#D4A017] text-[#0A0E17] rounded-lg px-4 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#B8860B] transition-colors border-none font-bold">
               ➤
             </button>
           </form>
