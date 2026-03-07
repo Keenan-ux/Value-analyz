@@ -1713,7 +1713,7 @@ export default function App() {
             scan: `Pick ONE specific, real undervalued U.S. stock.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
             adr: `Pick ONE specific international ADR available on US exchanges.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
             sector: `Identify an out-of-favor, beaten-down, or actively hated sector, then pick a fundamentally sound company within it from the provided list.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
-            predict: `Pick ONE specific, highly-volatile U.S. stock with an upcoming catalyst or earnings event.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`
+            predict: `Search the web for upcoming earnings calendars or FDA PDUFA calendars for the next 7 days. Identify ONE specific U.S. stock with a confirmed, high-impact binary event. ${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`
           };
           
           const discRes = await callGemini(discoveryPrompts[activeMode], "You are a ticker discovery tool. You must ONLY output the ticker wrapped in <TICKER> tags.", activeGeminiKey);
@@ -1838,17 +1838,37 @@ export default function App() {
 
           if (isTargeted) break;
 
-          const verdict = (p.VERDICT || "").toUpperCase();
-          if (verdict.includes("BUY")) {
-            setStatusMsg(prev => prev + `\n✓ SUCCESS! True Score: ${trueScore}/90. Rated ${p.VERDICT}.`);
-            break;
-          } else {
-            sessionExcluded.push(currentTicker);
-            if (attempt < maxAttempts) {
-              setStatusMsg(`Result: ${currentTicker} scored ${trueScore}/90 (${p.VERDICT}). Target is 70+. Rejecting and moving to next batch...`);
-              await new Promise(r => setTimeout(r, 2000));
+          if (activeMode === "predict") {
+            const sumBlock = p.CALL_SUMMARY || "";
+            const dirMatch = sumBlock.match(/DIRECTION:\s*(Bullish|Bearish)/i);
+            const convMatch = sumBlock.match(/CONVICTION:\s*([0-5])/i);
+            const isNoTrade = sumBlock.toLowerCase().includes("no trade") || !dirMatch;
+            const convScore = convMatch ? parseInt(convMatch[1], 10) : 0;
+
+            if (!isNoTrade && convScore >= 3) {
+              setStatusMsg(prev => prev + `\n✓ SUCCESS! Setup Identified: ${dirMatch[1]} (Conviction: ${convScore}/5).`);
+              break;
+            } else {
+              sessionExcluded.push(currentTicker);
+              if (attempt < maxAttempts) {
+                setStatusMsg(`Result: ${currentTicker} yielded No Trade or low conviction (${convScore}/5). Rejecting and moving to next...`);
+                await new Promise(r => setTimeout(r, 2000));
+              }
+              attempt++;
             }
-            attempt++;
+          } else {
+            const verdict = (p.VERDICT || "").toUpperCase();
+            if (verdict.includes("BUY")) {
+              setStatusMsg(prev => prev + `\n✓ SUCCESS! True Score: ${trueScore}/90. Rated ${p.VERDICT}.`);
+              break;
+            } else {
+              sessionExcluded.push(currentTicker);
+              if (attempt < maxAttempts) {
+                setStatusMsg(`Result: ${currentTicker} scored ${trueScore}/90 (${p.VERDICT}). Target is 70+. Rejecting and moving to next batch...`);
+                await new Promise(r => setTimeout(r, 2000));
+              }
+              attempt++;
+            }
           }
         } else {
           if (isTargeted) {
@@ -1860,9 +1880,18 @@ export default function App() {
       } // End Agentic Loop
 
       if (finalParsed) {
-        const finalVerdict = (finalParsed.VERDICT || "").toUpperCase();
+        let isSuccess = false;
         
-        if (!isTargeted && !finalVerdict.includes("BUY")) {
+        if (activeMode === "predict") {
+          const sumBlock = finalParsed.CALL_SUMMARY || "";
+          const dirMatch = sumBlock.match(/DIRECTION:\s*(Bullish|Bearish)/i);
+          const convMatch = sumBlock.match(/CONVICTION:\s*([0-5])/i);
+          isSuccess = dirMatch && convMatch && parseInt(convMatch[1], 10) >= 3;
+        } else {
+          isSuccess = (finalParsed.VERDICT || "").toUpperCase().includes("BUY");
+        }
+
+        if (!isTargeted && !isSuccess) {
           setScannedBatch(localBatch);
           setUnlucky(true);
         } else {
@@ -1998,29 +2027,39 @@ export default function App() {
         
         {unlucky && !loading && (
           <div className="animate-[fadeIn_0.4s_ease] bg-[#111827] border border-[#1E293B] rounded-xl p-10 text-center mt-6">
-            <div className="text-5xl mb-5">🎰</div>
-            <h3 className="text-2xl font-semibold text-slate-200 mb-3">Unlucky!</h3>
+            <div className="text-5xl mb-5">{mode === "predict" ? "🛡️" : "🎰"}</div>
+            <h3 className="text-2xl font-semibold text-slate-200 mb-3">{mode === "predict" ? "Capital Preserved." : "Unlucky!"}</h3>
             <p className="text-[14px] text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
-              We scanned a batch of {marketCapFilter !== "Any" ? marketCapFilter + "-cap " : ""}candidates, but none met the rigorous 75/90 "Buy" threshold. The strict Chicago Booth methodology kept your capital safe!
+              {mode === "predict" 
+                ? "We surveyed near-term binary events, but none met the 3/5 minimum conviction threshold for a directional swing trade. Waiting for a better setup."
+                : `We scanned a batch of ${marketCapFilter !== "Any" ? marketCapFilter + "-cap " : ""}candidates, but none met the rigorous 75/90 "Buy" threshold. The strict Chicago Booth methodology kept your capital safe!`
+              }
             </p>
 
             {scannedBatch.length > 0 && (
               <div className="mb-10">
                 <div className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4">Candidates Evaluated</div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
-                  {scannedBatch.map((item, idx) => (
-                    <button
-                      key={item.ticker + idx}
-                      onClick={() => run("analyze", item.ticker)}
-                      className="bg-[#0A0E17] border border-[#1E293B] hover:border-[#B8860B] rounded-xl p-4 cursor-pointer transition-all duration-200 group flex flex-col items-center shadow-md"
-                    >
-                      <div className="text-xl font-mono font-bold text-slate-200 group-hover:text-[#B8860B] transition-colors">{item.ticker}</div>
-                      <div className={`text-sm font-mono font-semibold mt-1 mb-2 ${item.score >= 60 ? 'text-amber-500' : 'text-red-500'}`}>{item.score}/90</div>
-                      <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-auto opacity-50 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
-                        <span>Analyze</span> <span className="text-[10px]">→</span>
-                      </div>
-                    </button>
-                  ))}
+                  {scannedBatch.map((item, idx) => {
+                    const isPredict = mode === "predict";
+                    const displayVal = isPredict ? `${item.score}/5` : `${item.score}/90`;
+                    const colorClass = isPredict 
+                      ? (item.score >= 3 ? 'text-[#B8860B]' : 'text-slate-400')
+                      : (item.score >= 60 ? 'text-[#B8860B]' : 'text-red-500');
+                    const label = isPredict ? "Conviction" : "Score";
+                      
+                    return (
+                      <button
+                        key={item.ticker + idx}
+                        onClick={() => run("analyze", item.ticker)}
+                        className="bg-[#0A0E17] border border-[#1E293B] hover:border-[#B8860B] rounded-xl p-4 cursor-pointer transition-all duration-200 group flex flex-col items-center shadow-md relative"
+                      >
+                        <div className="text-[9px] text-slate-500 font-mono tracking-widest uppercase mb-1">{label}</div>
+                        <div className="text-xl font-mono font-bold text-slate-200 group-hover:text-[#B8860B] transition-colors">{item.ticker}</div>
+                        <div className={`text-sm font-mono font-semibold mt-1 mb-2 ${colorClass}`}>{displayVal}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
