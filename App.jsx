@@ -230,14 +230,37 @@ const fetchFinnhubData = async (tk, key) => {
   }
 };
 
-const fetchETFHoldings = async (tk, key) => {
-  if (!key || key.trim().length === 0) throw new Error("Finnhub API key required for ETF Analysis.");
-  const token = key.trim();
-  const res = await fetch(`https://finnhub.io/api/v1/etf/holdings?symbol=${tk}&token=${token}`);
-  if (!res.ok) throw new Error("Failed to fetch ETF holdings or invalid ticker.");
-  const data = await res.json();
-  if (!data.holdings || data.holdings.length === 0) throw new Error("No holdings found for this ETF. Note: finnhub etf endpoint requires a premium key.");
-  return data.holdings;
+const fetchETFHoldings = async (tk, key, geminiKey) => {
+  // Try Finnhub first if a key exists
+  if (key && key.trim().length > 0) {
+    const token = key.trim();
+    try {
+      const res = await fetch(`https://finnhub.io/api/v1/etf/holdings?symbol=${tk}&token=${token}`);
+      const data = await res.json();
+      if (res.ok && data.holdings && data.holdings.length > 0) {
+        return data.holdings;
+      }
+    } catch(e) {
+      console.warn("Finnhub ETF fetch failed, falling back to Gemini LLM", e);
+    }
+  }
+
+  // Fallback to Gemini AI Web Search
+  if (!geminiKey) throw new Error("Finnhub requires a premium key. No Gemini API key provided for the web search fallback.");
+  
+  console.log(`Using Gemini to scrape ETF holdings for ${tk}...`);
+  const prompt = `Search the web for the official current holdings of the ETF ticker ${tk}. Process the top constituents. Return ONLY a raw JSON array of objects. Each object must have exactly two keys: "symbol" (the stock ticker string) and "percent" (the exact weight percentage as a number, e.g. 6.54 for 6.54%). Do not include any HTML, markdown formatting, backticks, or other text. Sort them from highest percent to lowest percent.`;
+  const sysPrompt = "You are a precise JSON extractor. Output ONLY the raw JSON array. Start with [ and end with ]. No other text.";
+  
+  try {
+    const text = await callGemini(prompt, sysPrompt, geminiKey, []);
+    const cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const holdings = JSON.parse(cleanText);
+    if (!Array.isArray(holdings) || holdings.length === 0) throw new Error("Invalid array returned by Gemini");
+    return holdings;
+  } catch (err) {
+    throw new Error("Failed to fetch ETF holdings: Finnhub requires premium & LLM web search extraction failed.");
+  }
 };
 
 
@@ -1215,8 +1238,8 @@ export default function App() {
 
     try {
       if (isTargeted && assetType === "etf") {
-        setStatusMsg(`Fetching full holdings for ETF ${tk}...`);
-        const holdingsRaw = await fetchETFHoldings(tk, finnhubKey);
+        setStatusMsg(`Fetching full holdings for ETF ${tk}...\n(Attempting Finnhub, fallback to Gemini Web Search)`);
+        const holdingsRaw = await fetchETFHoldings(tk, finnhubKey, activeGeminiKey);
         
         let holdings = holdingsRaw.sort((a,b) => (b.percent || 0) - (a.percent || 0));
         
