@@ -6,11 +6,9 @@ const RUNTIME_API_KEY = ""; // Runtime provides the key automatically
 
 // Expanded from ~125 to 250+ vetted stocks to deeply dilute LLM biases
 const MODES = [
-  { id: "scan", label: "I'm Feeling Lucky", desc: "Autonomously find undervalued stocks", icon: "🍀" },
-  { id: "analyze", label: "Analyze Ticker", desc: "Deep dive on a specific stock or ETF", icon: "📊" },
-  { id: "earnings", label: "Earnings Analysis", desc: "Post-earnings drift analysis", icon: "📈" },
-  { id: "adr", label: "ADR Scanner", desc: "International value opportunities", icon: "🌍" },
-  { id: "sector", label: "Contrarian Deep Value", desc: "Find strong companies in hated sectors", icon: "💣" },
+  { id: "analyze", label: "Analyze Ticker", desc: "Deep dive on a specific stock or ETF", icon: "✦", borderClass: "border-[#D0A6AA]", shadowClass: "hover:shadow-[#D0A6AA]/20", textClass: "group-hover:text-[#D0A6AA]" },
+  { id: "scan", label: "I'm Feeling Lucky", desc: "Autonomously find undervalued stocks", icon: "☘️", borderClass: "border-[#9CAF88]", shadowClass: "hover:shadow-[#9CAF88]/20", textClass: "group-hover:text-[#9CAF88]" },
+  { id: "predict", label: "Predictions Beta", desc: "Swing trade probability testing", icon: "✧", borderClass: "border-[#AFA192]", shadowClass: "hover:shadow-[#AFA192]/20", textClass: "group-hover:text-[#AFA192]" },
 ];
 
 const TICKER_POOLS = {
@@ -111,6 +109,52 @@ RULES:
 - Strong Buy >= 80/90, Buy >= 70/90, Hold 55-69, Avoid < 55, Strong Avoid < 45.
 - This is for educational/research purposes only, not financial advice.`;
 
+const PREDICTION_PROMPT = `You are an AI-driven directional analysis system. Your task is to produce 1-5 day directional predictions on SPY, sector ETFs, or individual stocks. You operate as a systematic, multi-factor synthesis engine.
+"No Trade" is the default output. You only issue directional calls when multiple factors converge with at least 3/5 conviction. Selectivity IS the edge.
+
+PHASE 1: AUTONOMOUS DATA SOURCING
+Use web search to gather:
+1. Macro Calendar (Next 1-5 Trading Days): FOMC, CPI, PPI, NFP, etc.
+2. Current Positioning & Volatility: VIX, put/call ratio, Gamma exposure.
+3. Sentiment: AAII, CNN Fear & Greed, fund flows.
+4. Technical Context: 50/200-day MAs, 52-week highs/lows, RSI.
+5. Macro Regime: 10Y yield, DXY, Crude oil.
+6. Narrative / Catalysts: Dominant narrative, geopolitics, sector rotation.
+7. For Single Stocks: Final overlay of recent earnings, analyst revisions, insider buying.
+
+PHASE 2: FACTOR SCORING
+Weight the bullish vs bearish factors. Check for sentiment extremes (e.g. Extreme Fear = contrarian bullish).
+
+PHASE 3: STRUCTURED OUTPUT
+You MUST use this exact structure with these exact === markers. Do not deviate. DO NOT use generic placeholders inside the actual data generation.
+
+===HEADER===
+TICKER: Actual Symbol
+COMPANY: Actual Name
+SECTOR: Actual Sector
+CURRENT_PRICE: $Actual.Price
+
+===CALL_SUMMARY===
+DIRECTION: Bullish / Bearish / No Trade
+CONVICTION: 1-5
+TIME_HORIZON: Briefly specify
+TARGET: Price or %
+STOP: Invalidation level
+CATALYST_DEPENDENCY: Yes/No + Brief reason
+
+===THESIS===
+2-4 sentences explaining the core rationale. Why this direction, why now.
+
+===KEY_RISKS===
+What could go wrong. Identify the largest single risk to the call.
+
+===CONDITIONAL_SCENARIOS===
+Scenario A (Base): Direction + target.
+Scenario B (Alternative): Direction + target.
+
+===SOURCES===
+List specific sources you used. Format as Markdown links: [Source Title](https://actual-url.com).
+`;
 
 // ─── HELPER FUNCTIONS ───
 
@@ -586,18 +630,15 @@ const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnloc
       {!isUnlocked && <button onClick={onUnlockClick} className="block w-full text-right text-[10px] text-[#D4A017] mt-2 font-mono uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-none p-0 transition-all">🔒 Locked: Max 10 (Click to Unlock)</button>}
     </div>
 
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {MODES.map(o => {
         return (
-          <button key={o.id} onClick={() => setMode(o.id)} className="w-full glass-button rounded-xl p-5 px-6 cursor-pointer text-left flex items-center gap-4 group hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/10">
-            <span className="text-3xl w-12 text-center">{o.icon}</span>
-            <div className="flex-1">
-              <div className="text-base font-semibold text-slate-200 mb-1">
-                {o.label}
-              </div>
-              <div className="text-[13px] text-slate-400">{o.desc}</div>
+          <button key={o.id} onClick={() => setMode(o.id)} className={`w-full glass-button rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-start gap-2 group hover:-translate-y-1 transition-all border ${o.borderClass} ${o.shadowClass}`}>
+            <span className="text-3xl mb-2 opacity-80 group-hover:opacity-100 transition-opacity">{o.icon}</span>
+            <div className={`text-[15px] font-semibold mb-1 transition-colors text-slate-200 ${o.textClass}`}>
+              {o.label}
             </div>
-            <span className="text-slate-500 text-lg group-hover:text-[#D4A017] transition-colors">→</span>
+            <div className="text-[12px] text-slate-400 leading-relaxed max-w-[180px]">{o.desc}</div>
           </button>
         );
       })}
@@ -753,7 +794,7 @@ const WatchlistGrid = ({ watchlist, onSelect }) => (
 
 const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, marketCapFilter, setMarketCapFilter, files, setFiles, isUnlocked, assetType, setAssetType, etfDepth, setEtfDepth, customEtfCount, setCustomEtfCount, onUnlockClick }) => {
   const activeMode = MODES.find(m => m.id === mode);
-  const isTargeted = mode === "analyze" || mode === "earnings";
+  const isTargeted = mode === "analyze" || mode === "earnings" || mode === "predict";
   const isValid = !isTargeted || ticker.trim().length > 0;
   
   const handleDrop = (e) => {
@@ -795,8 +836,16 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
           <>
             <div className="mb-6 relative z-10">
               <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-2">Ticker Symbol</label>
-              <input ref={inputRef} type="text" value={ticker} onChange={e => setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g, ""))} onKeyDown={e => { if (e.key === "Enter" && isValid) onRun(); }} placeholder="e.g. AAPL, INTC, MU" maxLength={6} className="w-full p-4 px-5 text-xl font-mono font-semibold bg-brand-dark/50 border border-brand-border focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl text-brand-gold outline-none tracking-widest transition-all shadow-inner" />
+              <input ref={inputRef} type="text" value={ticker} onChange={e => setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g, ""))} onKeyDown={e => { if (e.key === "Enter" && isValid) onRun(); }} placeholder="e.g. AAPL, INTC, SPY" maxLength={6} className="w-full p-4 px-5 text-xl font-mono font-semibold bg-brand-dark/50 border border-brand-border focus:border-brand-gold focus:ring-1 focus:ring-brand-gold rounded-xl text-brand-gold outline-none tracking-widest transition-all shadow-inner" />
               <div className="mt-2 text-[11px] text-green-500 font-mono">● Real-time Finnhub quote will anchor the analysis</div>
+              {mode === "predict" && (
+                <button 
+                  onClick={() => { setTicker("AUTO"); onRun("predict", "AUTO"); }}
+                  className="mt-4 w-full py-3 bg-[#D4A017]/10 border border-[#D4A017]/30 text-[#D4A017] rounded-xl font-mono text-sm tracking-widest uppercase hover:bg-[#D4A017]/20 transition-colors cursor-pointer text-center"
+                >
+                  ☘️ Auto-Find Swing Trade
+                </button>
+              )}
             </div>
             <div className="mb-6 relative z-10 flex gap-4">
               <button onClick={() => setAssetType("stock")} className={`flex-1 py-3 rounded-xl font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${assetType === "stock" ? "bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]" : "bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200"}`}>Single Stock</button>
@@ -1041,8 +1090,24 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
         </Section>
       )}
 
+      {/* Prediction Mode Results */}
+      {parsed.CALL_SUMMARY && (
+        <div className="bg-[#111827] border border-[#AFA192]/30 rounded-lg p-6 px-7 mb-5 print:break-inside-avoid shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_top_right,rgba(175,161,146,0.1),transparent)] pointer-events-none" />
+          <div className="flex items-center gap-3 mb-4 relative z-10"><span className="text-2xl">🎯</span><h3 className="m-0 text-[15px] font-mono text-[#AFA192] uppercase tracking-widest font-bold">Call Summary</h3></div>
+          <div className="text-[14px] leading-relaxed text-slate-200 font-mono whitespace-pre-wrap relative z-10">{parsed.CALL_SUMMARY}</div>
+        </div>
+      )}
+
+      {parsed.CONDITIONAL_SCENARIOS && (
+        <div className="bg-[#111827] border border-[#1E293B] rounded-lg p-5 px-6 mb-5 print:break-inside-avoid shadow-sm">
+          <div className="flex items-center gap-2.5 mb-4"><span className="text-xl">🛤️</span><h3 className="m-0 text-[14px] font-mono text-slate-300 uppercase tracking-widest font-semibold">Conditional Scenarios</h3></div>
+          <div className="text-[13px] leading-relaxed text-slate-300 whitespace-pre-wrap">{parsed.CONDITIONAL_SCENARIOS}</div>
+        </div>
+      )}
+
       {/* Text Sections */}
-      {parsed.THESIS && <Section title="Investment Thesis" icon="💡"><div className="border-l-4 border-[#D4A017] pl-4 italic text-slate-300">{parsed.THESIS}</div></Section>}
+      {parsed.THESIS && <Section title="Investment Thesis" icon="💡"><div className="border-l-4 border-[#D4A017] pl-4 italic text-slate-300 tracking-wide leading-relaxed">{parsed.THESIS}</div></Section>}
       {parsed.SCREENING_RATIONALE && <Section title="Why This Name Surfaced" icon="🎯">{parsed.SCREENING_RATIONALE}</Section>}
       {parsed.EARNINGS_FORECAST && <Section title="Future Earnings Forecast" icon="🔮">{parsed.EARNINGS_FORECAST}</Section>}
       {parsed.INCOME_STATEMENT && <Section title="Income Statement (DuPont Analysis)" icon="📊">{parsed.INCOME_STATEMENT}</Section>}
@@ -1052,18 +1117,18 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
       {parsed.QUALITATIVE && <Section title="Qualitative" icon="🔬">{parsed.QUALITATIVE}</Section>}
 
       {/* Risks & Catalysts Split */}
-      {(parsed.CATALYSTS || parsed.RISKS) && (
+      {(parsed.CATALYSTS || parsed.RISKS || parsed.KEY_RISKS) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {parsed.CATALYSTS && (
-            <div className="bg-[#111827] border border-[#1E293B] rounded-lg p-5 px-6 print:break-inside-avoid">
+            <div className="bg-[#111827] border border-[#1E293B] rounded-lg p-5 px-6 print:break-inside-avoid shadow-sm">
               <div className="flex items-center gap-2.5 mb-3.5"><span className="text-base">🚀</span><h3 className="m-0 text-[13px] font-mono text-green-500 uppercase tracking-widest font-semibold">Catalysts</h3></div>
-              <div className="text-[13px] leading-relaxed text-slate-300">{parsed.CATALYSTS}</div>
+              <div className="text-[13px] leading-relaxed text-slate-300 whitespace-pre-wrap">{parsed.CATALYSTS}</div>
             </div>
           )}
-          {parsed.RISKS && (
-            <div className="bg-[#111827] border border-[#1E293B] rounded-lg p-5 px-6 print:break-inside-avoid">
+          {(parsed.RISKS || parsed.KEY_RISKS) && (
+            <div className="bg-[#111827] border border-[#1E293B] rounded-lg p-5 px-6 print:break-inside-avoid shadow-sm">
               <div className="flex items-center gap-2.5 mb-3.5"><span className="text-base">⚠️</span><h3 className="m-0 text-[13px] font-mono text-red-500 uppercase tracking-widest font-semibold">Risks</h3></div>
-              <div className="text-[13px] leading-relaxed text-slate-300">{parsed.RISKS}</div>
+              <div className="text-[13px] leading-relaxed text-slate-300 whitespace-pre-wrap">{parsed.RISKS || parsed.KEY_RISKS}</div>
             </div>
           )}
         </div>
@@ -1452,7 +1517,7 @@ export default function App() {
     if (typeof overrideMode === 'string') setMode(overrideMode);
     if (typeof overrideTicker === 'string') setTicker(overrideTicker);
 
-    const isTargeted = activeMode === "analyze" || activeMode === "earnings" || activeMode === "etf";
+    const isTargeted = activeMode === "analyze" || activeMode === "earnings" || activeMode === "etf" || (activeMode === "predict" && tk !== "AUTO");
     if (isTargeted && !tk) return;
 
     setLoading(true); setError(null); setRawResult(""); setParsed(null); 
@@ -1647,7 +1712,8 @@ export default function App() {
           const discoveryPrompts = {
             scan: `Pick ONE specific, real undervalued U.S. stock.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
             adr: `Pick ONE specific international ADR available on US exchanges.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
-            sector: `Identify an out-of-favor, beaten-down, or actively hated sector, then pick a fundamentally sound company within it from the provided list.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`
+            sector: `Identify an out-of-favor, beaten-down, or actively hated sector, then pick a fundamentally sound company within it from the provided list.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`,
+            predict: `Pick ONE specific, highly-volatile U.S. stock with an upcoming catalyst or earnings event.${capInstruction} Return ONLY its ticker symbol enclosed in XML tags: <TICKER>SYMBOL</TICKER>.`
           };
           
           const discRes = await callGemini(discoveryPrompts[activeMode], "You are a ticker discovery tool. You must ONLY output the ticker wrapped in <TICKER> tags.", activeGeminiKey);
@@ -1705,9 +1771,14 @@ export default function App() {
              const hasFilesInstr = sessionFiles.length > 0 ? "IMPORTANT OVERRIDE: Documents attached. USE ATTACHED DOCUMENTS EXPLICITLY OVER WEB SEARCH." : "";
              analysisPromptText = `MODE: earnings\nTICKER: ${currentTicker}\n\n${ldb}\n\nPerform a post-earnings drift analysis on ${currentTicker}. Search for the most recent earnings results vs consensus, stock reaction, forward guidance, and analyst revisions. Predict the direction of next quarter's earnings. ${useFinnhub ? "YOU MUST USE THE PROVIDED LIVE MARKET DATA." : ""}\n\n${hasFilesInstr}\n\nOutput in the required structured format. NO PLACEHOLDERS. FILL EVERY FIELD.`;
              finalFiles = sessionFiles;
+        } else if (activeMode === "predict") {
+             const hasFilesInstr = sessionFiles.length > 0 ? "IMPORTANT OVERRIDE: Documents attached. USE ATTACHED DOCUMENTS EXPLICITLY OVER WEB SEARCH." : "";
+             analysisPromptText = `MODE: predict\nTICKER: ${currentTicker}\n\n${ldb}\n\nExecute the AI Directional Prediction Protocol for ${currentTicker}. ${useFinnhub ? "YOU MUST USE THE PROVIDED LIVE MARKET DATA." : ""}\n\n${hasFilesInstr}\n\nOutput in the EXACT requested structured format with === markers. NO PLACEHOLDERS. FILL EVERY FIELD.`;
+             finalFiles = sessionFiles;
         }
 
-        const txt = await callGemini(analysisPromptText, SYSTEM_PROMPT, activeGeminiKey, finalFiles);
+        const promptToUse = activeMode === "predict" ? PREDICTION_PROMPT : SYSTEM_PROMPT;
+        const txt = await callGemini(analysisPromptText, promptToUse, activeGeminiKey, finalFiles);
         const p = parseAnalysis(txt);
         
         if (Object.keys(p).length > 2) {
