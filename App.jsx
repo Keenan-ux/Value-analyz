@@ -428,9 +428,9 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
       </div>
     </div>
     
-    <div className="flex items-center gap-1.5 md:gap-3">
+    <div className="flex items-center gap-1.5 md:gap-3 flex-wrap justify-end">
       {/* Cloud Auth Section In Header */}
-      <div className="flex items-center gap-2 border-r border-[#1E293B] pr-2 mr-1 hidden sm:flex">
+      <div className="flex items-center gap-2 border-r border-[#1E293B] pr-2 mr-1">
         {isLoggedIn ? (
           <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-lg border border-[#1E293B] shadow-inner">
             <span className="text-[#D4A017] text-xs">🟢</span>
