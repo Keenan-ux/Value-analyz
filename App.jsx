@@ -466,11 +466,11 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
   <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-4 sm:px-7 py-3 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-3 sm:gap-0">
     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
       <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-gold to-[#B8860B] flex items-center justify-center text-base font-bold text-brand-dark font-mono shadow-[0_0_15px_rgba(212,160,23,0.4)] shrink-0">V</div>
         <div>
-          <div className="text-[15px] font-semibold text-slate-200">Value Analyst</div>
-          <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2">
-            <span className="hidden md:inline">Chicago Booth Protocol</span> <span className="text-green-500 hidden sm:inline">● {useFinnhub ? "Finnhub Enabled" : "Web Search"}</span>
+          <div className="text-[18px] font-light tracking-tight text-slate-200 leading-none">Booth <span className="text-[#B8860B] font-semibold">Check</span></div>
+          <div className="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">
+            <span className="hidden sm:inline">Powered by the Chicago Booth methodology</span>
+            <span className="sm:hidden">Chicago Booth Protocol</span>
           </div>
         </div>
       </div>
@@ -614,14 +614,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 
 const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
-    <div className="text-center mb-10">
-      <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">Booth <span className="text-[#B8860B] font-semibold">Check</span></h1>
-      <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
-        AI Value Analyst - Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
-      </p>
-    </div>
-
-    <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
+    <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg mt-2">
       <div className="flex justify-between items-center mb-4">
         <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
           <span>⚙️</span> Autonomous Scan Length
