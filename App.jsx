@@ -544,8 +544,15 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 
 const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
-    <div className="text-center mb-10 relative">
-      <div className="absolute top-0 right-0 hidden sm:flex">
+    <div className="flex flex-col-reverse sm:flex-row items-center justify-between mb-10 gap-6">
+      <div className="text-center sm:text-left">
+        <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
+        <p className="text-slate-400 text-sm max-w-sm sm:max-w-lg leading-relaxed">
+          Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
+        </p>
+      </div>
+
+      <div className="flex w-full sm:w-auto justify-center sm:justify-end">
         {isLoggedIn ? (
           <div className="flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-lg border border-[#1E293B] shadow-inner">
             <span className="text-[#D4A017] text-sm">🟢</span>
@@ -553,15 +560,11 @@ const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnloc
             <button onClick={onLogout} className="text-[10px] font-mono text-slate-500 hover:text-red-400 ml-2 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Logout</button>
           </div>
         ) : (
-          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#D4A017]/50 text-[#D4A017] font-mono text-[11px] uppercase tracking-widest py-1.5 px-4 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)]">
+          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#D4A017]/50 text-[#D4A017] font-mono text-[11px] uppercase tracking-widest py-2 sm:py-1.5 px-6 sm:px-4 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)] w-full sm:w-auto">
             Sign In / Register
           </button>
         )}
       </div>
-      <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">AI Value <span className="text-[#D4A017] font-semibold">Analyst</span></h1>
-      <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
-        Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
-      </p>
     </div>
 
     <div className="mb-8 p-5 bg-[#111827] border border-[#1E293B] rounded-xl shadow-lg">
