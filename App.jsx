@@ -141,6 +141,8 @@ TIME_HORIZON: Briefly specify
 TARGET: Price or %
 STOP: Invalidation level
 CATALYST_DEPENDENCY: Yes/No + Brief reason
+BINARY_EVENT: Exact name of the catalyst/event (e.g. FDA PDUFA for Drug X, Q3 Earnings)
+EVENT_DATE: Exact date of the event (e.g. Nov 14, 2025)
 
 ===THESIS===
 2-4 sentences explaining the core rationale. Why this direction, why now.
@@ -153,7 +155,7 @@ Scenario A (Base): Direction + target.
 Scenario B (Alternative): Direction + target.
 
 ===SOURCES===
-List specific sources you used. Format as Markdown links: [Source Title](https://actual-url.com).
+List specific sources you used, including a direct link verifying the BINARY_EVENT and EVENT_DATE. Format as Markdown links: [Source Title](https://actual-url.com).
 `;
 
 // ─── HELPER FUNCTIONS ───
@@ -967,7 +969,9 @@ const LoadingState = ({ message, isAutonomous, scanLength = 1 }) => {
         <span className="inline-block w-2 h-2 rounded-full bg-[#B8860B] mr-2.5 animate-[pulse_1.5s_ease-in-out_infinite]" />{message}
       </div>
       <div className="mt-6 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-        {isAutonomous 
+        {isAutonomous && message.includes("predict")
+          ? `Autonomous scanning reviews catalysts and binary events to find a high conviction setup. Based on a queue of ${scanLength}, this deep search may take up to ${maxMins} minutes...`
+          : isAutonomous 
           ? `Autonomous scanning reviews multiple candidates to find a true value play. Based on a queue of ${scanLength}, this deep search may take up to ${maxMins} minutes...` 
           : "Extracting Finnhub data & generating fundamental analysis... This may take 30-60 seconds."}
       </div>
@@ -975,11 +979,12 @@ const LoadingState = ({ message, isAutonomous, scanLength = 1 }) => {
   );
 };
 
-const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggleWatchlist, live, useFinnhub }) => {
+const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggleWatchlist, live, useFinnhub, mode }) => {
   const h = parseKV(parsed.HEADER);
   const sc = parseScores(parsed.SCORES);
   const fv = parseFV(parsed.FAIR_VALUE);
   
+  const isPredict = mode === "predict";
   const qn = (sc.EARNINGS_QUALITY||0) + (sc.BALANCE_SHEET||0) + (sc.CASH_FLOW||0) + (sc.VALUATION||0) + (sc.CAPITAL_ALLOCATION||0);
   const ql = (sc.COMPETITIVE_MOAT||0) + (sc.MANAGEMENT||0) + (sc.CATALYST||0) + (sc.RISK_PROFILE||0);
   const tot = qn + ql;
@@ -1006,7 +1011,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
           <div>
             <div className="flex items-center gap-3 mb-1.5">
               <span className="text-3xl font-mono font-bold text-[#B8860B]">{h.TICKER || currentTicker || "N/A"}</span>
-              {parsed.VERDICT && <Badge v={parsed.VERDICT} />}
+              {parsed.VERDICT && !isPredict && <Badge v={parsed.VERDICT} />}
               {currentTicker && (
                 <button className="print:hidden bg-transparent border-none cursor-pointer text-2xl px-1 hover:scale-110 transition-transform duration-200" style={{ opacity: isSaved ? 1 : 0.4 }} onClick={toggleWatchlist} title={isSaved ? "Remove from Watchlist" : "Save to Watchlist"}>
                   {isSaved ? "⭐" : "☆"}
@@ -1038,7 +1043,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
       </div>
 
       {/* Quantitative & Qualitative Scores */}
-      {Object.keys(sc).length > 0 && (
+      {Object.keys(sc).length > 0 && !isPredict && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="bg-[#111827] border border-[#1E293B] rounded-lg p-5 px-6 print:break-inside-avoid">
             <div className="text-[11px] font-mono text-slate-400 uppercase tracking-widest mb-3.5">Quantitative</div>
@@ -1062,7 +1067,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
       )}
 
       {/* Fair Value Section */}
-      {Object.keys(fv).length > 0 && (
+      {Object.keys(fv).length > 0 && !isPredict && (
         <div className="mb-5">
           <div className="grid grid-cols-3 gap-3 mb-[-12px] relative z-10 mx-4">
             {["BEAR","BASE","BULL"].map(k => (
@@ -1076,12 +1081,12 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
         </div>
       )}
 
-      {/* Live Metrics */}
-      {live && lq && (
+      {/* Live Metrics (Standard Mode) */}
+      {live && lq && !isPredict && (
         <Section title="Finnhub Live Metrics" icon="📡">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-4">
-            <MetricBox label="52W High" value={lq.wk52High ? `$${lq.wk52High.toFixed(2)}` : '—'} />
-            <MetricBox label="52W Low" value={lq.wk52Low ? `$${lq.wk52Low.toFixed(2)}` : '—'} />
+            <MetricBox label="52W High" value={lq.wk52High && lq.wk52High < 10000 ? `$${lq.wk52High.toFixed(2)}` : '—'} />
+            <MetricBox label="52W Low" value={lq.wk52Low && lq.wk52Low < 10000 ? `$${lq.wk52Low.toFixed(2)}` : '—'} />
             <MetricBox label="P/E Ratio" value={lq.pe ? lq.pe.toFixed(2) : '—'} />
             <MetricBox label="P/B Ratio" value={lq.pb ? lq.pb.toFixed(2) : '—'} />
             <MetricBox label="Div Yield" value={lq.divYield ? `${lq.divYield.toFixed(2)}%` : '—'} />
@@ -1092,10 +1097,10 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
 
       {/* Prediction Mode Results */}
       {parsed.CALL_SUMMARY && (
-        <div className="bg-[#111827] border border-[#AFA192]/30 rounded-lg p-6 px-7 mb-5 print:break-inside-avoid shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_top_right,rgba(175,161,146,0.1),transparent)] pointer-events-none" />
-          <div className="flex items-center gap-3 mb-4 relative z-10"><span className="text-2xl">🎯</span><h3 className="m-0 text-[15px] font-mono text-[#AFA192] uppercase tracking-widest font-bold">Call Summary</h3></div>
-          <div className="text-[14px] leading-relaxed text-slate-200 font-mono whitespace-pre-wrap relative z-10">{parsed.CALL_SUMMARY}</div>
+        <div className="bg-[#111827] border-2 border-[#B8860B]/50 rounded-lg p-6 px-7 mb-5 print:break-inside-avoid shadow-[0_0_20px_rgba(184,134,11,0.15)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_top_right,rgba(184,134,11,0.2),transparent)] pointer-events-none" />
+          <div className="flex items-center gap-3 mb-4 relative z-10"><h3 className="m-0 text-[16px] font-mono text-[#B8860B] uppercase tracking-widest font-bold">Call Summary</h3></div>
+          <div className="text-[14px] leading-relaxed text-slate-200 font-mono whitespace-pre-wrap relative z-10 p-4 bg-[#0A0E17]/50 rounded-md border border-[#1E293B]">{parsed.CALL_SUMMARY}</div>
         </div>
       )}
 
@@ -1115,6 +1120,20 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
       {parsed.CASH_FLOW && <Section title="Cash Flow" icon="💰">{parsed.CASH_FLOW}</Section>}
       {parsed.VALUATION && <Section title="Valuation" icon="⚖️">{parsed.VALUATION}</Section>}
       {parsed.QUALITATIVE && <Section title="Qualitative" icon="🔬">{parsed.QUALITATIVE}</Section>}
+
+      {/* Live Metrics (Predict Mode Tertiary Data) */}
+      {live && lq && isPredict && (
+        <Section title="Finnhub Live Metrics" icon="📡">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-4 opacity-75">
+            <MetricBox label="52W High" value={lq.wk52High && lq.wk52High < 10000 ? `$${lq.wk52High.toFixed(2)}` : '—'} />
+            <MetricBox label="52W Low" value={lq.wk52Low && lq.wk52Low < 10000 ? `$${lq.wk52Low.toFixed(2)}` : '—'} />
+            <MetricBox label="P/E Ratio" value={lq.pe ? lq.pe.toFixed(2) : '—'} />
+            <MetricBox label="P/B Ratio" value={lq.pb ? lq.pb.toFixed(2) : '—'} />
+            <MetricBox label="Div Yield" value={lq.divYield ? `${lq.divYield.toFixed(2)}%` : '—'} />
+            <MetricBox label="Market Cap" value={lq.marketCap || h.MARKET_CAP || '—'} />
+          </div>
+        </Section>
+      )}
 
       {/* Risks & Catalysts Split */}
       {(parsed.CATALYSTS || parsed.RISKS || parsed.KEY_RISKS) && (
@@ -2023,7 +2042,7 @@ export default function App() {
           </>
         )}
 
-        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={() => run()} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} files={sessionFiles} setFiles={setSessionFiles} isUnlocked={isUnlocked} assetType={assetType} setAssetType={setAssetType} etfDepth={etfDepth} setEtfDepth={setEtfDepth} customEtfCount={customEtfCount} setCustomEtfCount={setCustomEtfCount} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />}
+        {mode && !loading && !parsed && !streamText && !error && !unlucky && <AnalysisForm mode={mode} ticker={ticker} setTicker={setTicker} onRun={(m, t) => run(m, t)} onBack={() => setMode(null)} inputRef={inputRef} marketCapFilter={marketCapFilter} setMarketCapFilter={setMarketCapFilter} files={sessionFiles} setFiles={setSessionFiles} isUnlocked={isUnlocked} assetType={assetType} setAssetType={setAssetType} etfDepth={etfDepth} setEtfDepth={setEtfDepth} customEtfCount={customEtfCount} setCustomEtfCount={setCustomEtfCount} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} />}
         
         {unlucky && !loading && (
           <div className="animate-[fadeIn_0.4s_ease] bg-[#111827] border border-[#1E293B] rounded-xl p-10 text-center mt-6">
@@ -2089,7 +2108,7 @@ export default function App() {
           </div>
         )}
         {streamText && !parsed && !loading && <div className="animate-[fadeIn_0.5s_ease]"><Section title="Analysis Results" icon="📄"><pre className="whitespace-pre-wrap font-mono text-[13px] leading-relaxed">{streamText}</pre></Section></div>}
-        {parsed && !loading && <AnalysisResults parsed={parsed} lq={lq} rawResult={rawResult} currentTicker={currentTicker} isSaved={isSaved} toggleWatchlist={toggleWatchlist} live={!!lq} useFinnhub={useFinnhub} />}
+        {parsed && !loading && <AnalysisResults parsed={parsed} lq={lq} rawResult={rawResult} currentTicker={currentTicker} isSaved={isSaved} toggleWatchlist={toggleWatchlist} live={!!lq} useFinnhub={useFinnhub} mode={mode} />}
       </main>
       
       <ChatBubble geminiKey={geminiKey} />
