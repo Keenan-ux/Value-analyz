@@ -417,20 +417,29 @@ const FairValueVisualizer = ({ current, fv, quote }) => {
 
 // ─── MAIN LAYOUT COMPONENTS ───
 const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey, setFinnhubKey, hasData, onReset, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
-  <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-7 py-3.5 flex items-center justify-between shadow-sm">
-    <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-gold to-[#B8860B] flex items-center justify-center text-base font-bold text-brand-dark font-mono shadow-[0_0_15px_rgba(212,160,23,0.4)]">V</div>
-      <div>
-        <div className="text-[15px] font-semibold text-slate-200">Value Analyst</div>
-        <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase flex items-center gap-2">
-          Chicago Booth Protocol <span className="text-green-500">● {useFinnhub ? "Finnhub Enabled" : "Web Search"}</span>
+  <header className="print:hidden sticky top-0 z-50 border-b border-brand-border bg-brand-panel/60 backdrop-blur-xl px-4 sm:px-7 py-3 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-3 sm:gap-0">
+    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+      <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-gold to-[#B8860B] flex items-center justify-center text-base font-bold text-brand-dark font-mono shadow-[0_0_15px_rgba(212,160,23,0.4)] shrink-0">V</div>
+        <div>
+          <div className="text-[15px] font-semibold text-slate-200">Value Analyst</div>
+          <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2">
+            <span className="hidden md:inline">Chicago Booth Protocol</span> <span className="text-green-500 hidden sm:inline">● {useFinnhub ? "Finnhub Enabled" : "Web Search"}</span>
+          </div>
         </div>
       </div>
+      
+      {/* Mobile-only Reset Button (if has data) */}
+      {hasData && (
+        <button onClick={onReset} className="sm:hidden bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[10px] uppercase tracking-widest font-mono transition-colors">
+          New Scan
+        </button>
+      )}
     </div>
     
-    <div className="flex items-center gap-1.5 md:gap-3 flex-wrap justify-end">
+    <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
       {/* Cloud Auth Section In Header */}
-      <div className="flex items-center gap-2 border-r border-[#1E293B] pr-2 mr-1">
+      <div className="flex items-center gap-2 sm:border-r sm:border-[#1E293B] sm:pr-2">
         {isLoggedIn ? (
           <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-lg border border-[#1E293B] shadow-inner">
             <span className="text-[#D4A017] text-xs">🟢</span>
@@ -454,11 +463,11 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
         <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
       </div>
 
-      <div className="flex items-center gap-1.5 mr-1 bg-[#111827] px-2 py-1 rounded-md border border-[#1E293B]">
+      <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-md border border-[#1E293B]">
         <button onClick={() => setUseFinnhub(!useFinnhub)} className={`relative w-8 h-4 rounded-full border-none cursor-pointer transition-colors duration-300 p-0 ${useFinnhub ? 'bg-green-500' : 'bg-slate-700'}`}>
           <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-300 ease-in-out ${useFinnhub ? 'left-[18px]' : 'left-0.5'}`} />
         </button>
-        <span className={`text-[9px] font-mono w-16 uppercase tracking-widest leading-none ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Live" : "Web"}</span>
+        <span className={`text-[9px] font-mono w-12 sm:w-16 uppercase tracking-widest leading-none ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Live" : "Web"}</span>
       </div>
 
       <button onClick={onUnlockClick} className="px-2 py-1 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-[10px] font-mono transition-colors flex items-center gap-1 shadow-[0_0_10px_rgba(212,160,23,0.2)] whitespace-nowrap" title="Unlock features via PIN">
@@ -466,7 +475,7 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
       </button>
 
       {hasData && (
-        <button onClick={onReset} className="self-end bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[11px] uppercase tracking-widest font-mono transition-colors ml-2">
+        <button onClick={onReset} className="hidden sm:block self-end bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-400 px-3 py-1.5 rounded cursor-pointer text-[11px] uppercase tracking-widest font-mono transition-colors ml-1">
           New Scan
         </button>
       )}
