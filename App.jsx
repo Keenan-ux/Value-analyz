@@ -367,7 +367,7 @@ const Section = ({ title, icon, children }) => (
   <div className="glass-panel p-6 mb-5 rounded-2xl print:break-inside-avoid transition-all duration-300 hover:shadow-2xl hover:border-brand-border/80">
     <div className="flex items-center gap-2.5 mb-3.5">
       <span className="text-base">{icon}</span>
-      <h3 className="m-0 text-[13px] font-mono text-[#D4A017] uppercase tracking-widest font-semibold">{title}</h3>
+      <h3 className="m-0 text-[13px] font-mono text-[#B8860B] uppercase tracking-widest font-semibold">{title}</h3>
     </div>
     <div className="text-sm leading-relaxed text-slate-200">{children}</div>
   </div>
@@ -420,15 +420,15 @@ const FairValueVisualizer = ({ current, fv, quote }) => {
         </div>
         <div className="text-right">
           <div className="text-[11px] font-mono text-slate-400 uppercase tracking-widest mb-1.5">Base Value</div>
-          <div className="text-xl font-mono font-semibold text-[#D4A017]">${base.toFixed(2)}</div>
+          <div className="text-xl font-mono font-semibold text-[#B8860B]">${base.toFixed(2)}</div>
         </div>
       </div>
 
       <div className="relative h-1.5 bg-[#1E293B] rounded-full mx-5">
         {low52 && high52 && <div className="absolute top-[2px] bottom-[2px] bg-slate-700 rounded-sm" style={{ left: `${getPct(low52)}%`, right: `${100 - getPct(high52)}%` }} />}
         {bear && bull && (
-          <div className="absolute -top-1 -bottom-1 bg-[#D4A017]/15 border-x border-dashed border-[#D4A017]/50 rounded-sm" style={{ left: `${getPct(Math.min(bear, bull))}%`, right: `${100 - getPct(Math.max(bear, bull))}%` }}>
-            <div className="absolute -top-5 w-full text-center text-[9px] font-mono text-[#D4A017]/80 tracking-wider">FV ZONE</div>
+          <div className="absolute -top-1 -bottom-1 bg-[#B8860B]/15 border-x border-dashed border-[#B8860B]/50 rounded-sm" style={{ left: `${getPct(Math.min(bear, bull))}%`, right: `${100 - getPct(Math.max(bear, bull))}%` }}>
+            <div className="absolute -top-5 w-full text-center text-[9px] font-mono text-[#B8860B]/80 tracking-wider">FV ZONE</div>
           </div>
         )}
         
@@ -441,8 +441,8 @@ const FairValueVisualizer = ({ current, fv, quote }) => {
           </div>
         )}
         {base && (
-          <div className="absolute -top-2 -bottom-2 w-0.5 bg-[#D4A017] z-10" style={{ left: `${getPct(base)}%` }}>
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono text-[#D4A017] font-bold">BASE</div>
+          <div className="absolute -top-2 -bottom-2 w-0.5 bg-[#B8860B] z-10" style={{ left: `${getPct(base)}%` }}>
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono text-[#B8860B] font-bold">BASE</div>
           </div>
         )}
         {bull && !bear && (
@@ -486,12 +486,12 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
       <div className="flex items-center gap-2 sm:border-r sm:border-[#1E293B] sm:pr-2">
         {isLoggedIn ? (
           <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-lg border border-[#1E293B] shadow-inner">
-            <span className="text-[#D4A017] text-xs">🟢</span>
+            <span className="text-[#B8860B] text-xs">🟢</span>
             <div className="text-slate-200 font-mono text-[10px] font-bold tracking-wider">{username}</div>
             <button onClick={onLogout} className="text-[9px] font-mono text-slate-500 hover:text-red-400 ml-1 transition-colors cursor-pointer bg-transparent border-none p-0 underline decoration-slate-600 underline-offset-2">Log out</button>
           </div>
         ) : (
-          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#D4A017]/50 text-[#D4A017] font-mono text-[10px] uppercase tracking-widest py-1 px-3 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)]">
+          <button onClick={onLoginClick} className="bg-[#111827] hover:bg-[#1E293B] border border-[#B8860B]/50 text-[#B8860B] font-mono text-[10px] uppercase tracking-widest py-1 px-3 rounded-md cursor-pointer transition-colors shadow-[0_0_10px_rgba(212,160,23,0.1)]">
             Sign In
           </button>
         )}
@@ -499,12 +499,12 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
 
       <div className="flex flex-col gap-0.5 hidden xl:flex">
         <label className="text-[8px] text-slate-400 font-mono uppercase">Gemini</label>
-        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+        <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#B8860B] rounded text-slate-200 outline-none transition-colors" />
       </div>
 
       <div className="flex flex-col gap-0.5 hidden xl:flex mr-2">
         <label className="text-[8px] text-slate-400 font-mono uppercase">Finnhub</label>
-        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#D4A017] rounded text-slate-200 outline-none transition-colors" />
+        <input type="password" value={finnhubKey} onChange={e => setFinnhubKey(e.target.value)} placeholder="Key..." className="w-16 px-1.5 py-1 text-[10px] font-mono bg-[#0A0E17] border border-[#1E293B] focus:border-[#B8860B] rounded text-slate-200 outline-none transition-colors" />
       </div>
 
       <div className="flex items-center gap-1.5 bg-[#111827] px-2 py-1 rounded-md border border-[#1E293B]">
@@ -514,7 +514,7 @@ const TopNav = ({ useFinnhub, setUseFinnhub, geminiKey, setGeminiKey, finnhubKey
         <span className={`text-[9px] font-mono w-12 sm:w-16 uppercase tracking-widest leading-none ${useFinnhub ? 'text-green-500' : 'text-slate-400'}`}>{useFinnhub ? "Live" : "Web"}</span>
       </div>
 
-      <button onClick={onUnlockClick} className="px-2 py-1 bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017]/50 text-[#D4A017] rounded cursor-pointer text-[10px] font-mono transition-colors flex items-center gap-1 shadow-[0_0_10px_rgba(212,160,23,0.2)] whitespace-nowrap" title="Unlock features via PIN">
+      <button onClick={onUnlockClick} className="px-2 py-1 bg-[#B8860B]/10 hover:bg-[#B8860B]/20 border border-[#B8860B]/50 text-[#B8860B] rounded cursor-pointer text-[10px] font-mono transition-colors flex items-center gap-1 shadow-[0_0_10px_rgba(212,160,23,0.2)] whitespace-nowrap" title="Unlock features via PIN">
         <span>🔓</span> <span className="hidden md:inline font-bold uppercase tracking-widest text-[9px]">Unlock</span>
       </button>
 
@@ -591,19 +591,19 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
   return (
     <div 
       ref={containerRef}
-      className="flex items-center justify-center p-3 border-2 border-[#D4A017]/30 bg-[#D4A017]/5 rounded-lg cursor-ns-resize hover:border-[#D4A017] transition-colors relative touch-none select-none"
+      className="flex items-center justify-center p-3 border-2 border-[#B8860B]/30 bg-[#B8860B]/5 rounded-lg cursor-ns-resize hover:border-[#B8860B] transition-colors relative touch-none select-none"
       onMouseDown={handlePointerDown}
       onTouchStart={handlePointerDown}
       title="Scroll or Drag up/down to change"
     >
-      <div className="absolute inset-y-0 left-0 flex flex-col items-center justify-center pl-3 text-[#D4A017]/40 text-[10px] space-y-3 pointer-events-none">
+      <div className="absolute inset-y-0 left-0 flex flex-col items-center justify-center pl-3 text-[#B8860B]/40 text-[10px] space-y-3 pointer-events-none">
         <span>▲</span>
         <span>▼</span>
       </div>
-      <div className="text-3xl font-mono font-bold text-[#D4A017]">
+      <div className="text-3xl font-mono font-bold text-[#B8860B]">
         {value}
       </div>
-      <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-[10px] font-mono text-[#D4A017]/60 pointer-events-none uppercase tracking-widest">
+      <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-[10px] font-mono text-[#B8860B]/60 pointer-events-none uppercase tracking-widest">
         {value === 1 ? 'Ticker' : 'Tickers'}
       </div>
     </div>
@@ -613,7 +613,7 @@ const DragNumberInput = ({ value, onChange, min = 1, max = 100 }) => {
 const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnlockClick, isLoggedIn, username, onLoginClick, onLogout }) => (
   <div className="animate-[fadeIn_0.5s_ease]">
     <div className="text-center mb-10">
-      <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">Booth <span className="text-[#D4A017] font-semibold">Check</span></h1>
+      <h1 className="text-3xl font-light m-0 mb-2 tracking-tight text-slate-200">Booth <span className="text-[#B8860B] font-semibold">Check</span></h1>
       <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
         AI Value Analyst - Autonomous fundamental analysis powered by the Chicago Booth methodology. <span className="text-green-500">Real-time pricing via Finnhub.</span>
       </p>
@@ -627,7 +627,7 @@ const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnloc
         <span className="text-[10px] text-slate-500 font-mono">Scroll or drag to adjust</span>
       </div>
       <DragNumberInput value={scanLength} onChange={setScanLength} min={1} max={isUnlocked ? 100 : 10} />
-      {!isUnlocked && <button onClick={onUnlockClick} className="block w-full text-right text-[10px] text-[#D4A017] mt-2 font-mono uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-none p-0 transition-all">🔒 Locked: Max 10 (Click to Unlock)</button>}
+      {!isUnlocked && <button onClick={onUnlockClick} className="block w-full text-right text-[10px] text-[#B8860B] mt-2 font-mono uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-none p-0 transition-all">🔒 Locked: Max 10 (Click to Unlock)</button>}
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -645,7 +645,7 @@ const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnloc
     </div>
 
     <div className="mt-6 bg-[#111827] border border-[#1E293B] rounded-xl p-6 text-left shadow-lg">
-      <h3 className="text-[#D4A017] font-mono uppercase tracking-widest text-sm mb-3">FAQ: Sourcing & Accuracy</h3>
+      <h3 className="text-[#B8860B] font-mono uppercase tracking-widest text-sm mb-3">FAQ: Sourcing & Accuracy</h3>
       <p className="text-slate-300 text-[13px] leading-relaxed mb-4">
         <strong>What is the Chicago Booth Protocol?</strong><br/>
         This system follows the methodology outlined in the University of Chicago paper <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4835311" target="_blank" rel="noreferrer" className="text-green-500 hover:underline">Financial Statement Analysis with Large Language Models</a> (Kim, Muhn & Nikolaev, 2024). It performs Chain-of-Thought reasoning to disaggregate ROE (DuPont analysis), evaluate growth constraints, and predict earnings direction.
@@ -657,24 +657,24 @@ const WelcomeScreen = ({ setMode, scanLength, setScanLength, isUnlocked, onUnloc
       </p>
     </div>
 
-    <div className="mt-4 p-4 px-5 bg-[#D4A017]/10 border border-[#D4A017]/20 rounded-md text-xs text-slate-400 leading-relaxed text-center">
-      <strong className="text-[#D4A017]">Disclaimer:</strong> Educational and research purposes only. Not financial advice.
+    <div className="mt-4 p-4 px-5 bg-[#B8860B]/10 border border-[#B8860B]/20 rounded-md text-xs text-slate-400 leading-relaxed text-center">
+      <strong className="text-[#B8860B]">Disclaimer:</strong> Educational and research purposes only. Not financial advice.
     </div>
   </div>
 );
 
 const LiveScanTable = ({ data }) => (
-  <div className="print:hidden animate-[fadeIn_0.5s_ease] mt-8 mb-6 max-w-xl mx-auto bg-[#0A0E17]/80 border border-[#D4A017]/30 rounded-lg overflow-hidden backdrop-blur-sm relative shadow-2xl shadow-black">
-    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4A017]/50 to-transparent animate-[pulse_2s_ease-in-out_infinite]" />
-    <div className="bg-[#D4A017]/10 px-4 py-3 border-b border-[#D4A017]/20 flex items-center justify-between">
+  <div className="print:hidden animate-[fadeIn_0.5s_ease] mt-8 mb-6 max-w-xl mx-auto bg-[#0A0E17]/80 border border-[#B8860B]/30 rounded-lg overflow-hidden backdrop-blur-sm relative shadow-2xl shadow-black">
+    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#B8860B]/50 to-transparent animate-[pulse_2s_ease-in-out_infinite]" />
+    <div className="bg-[#B8860B]/10 px-4 py-3 border-b border-[#B8860B]/20 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4A017] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4A017]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#B8860B] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#B8860B]"></span>
         </span>
-        <span className="text-xs font-mono text-[#D4A017] uppercase tracking-widest font-bold">Live Scan Feed</span>
+        <span className="text-xs font-mono text-[#B8860B] uppercase tracking-widest font-bold">Live Scan Feed</span>
       </div>
-      <span className="text-[10px] font-mono text-[#D4A017]/50 uppercase tracking-widest">Global Top 50 Syncing...</span>
+      <span className="text-[10px] font-mono text-[#B8860B]/50 uppercase tracking-widest">Global Top 50 Syncing...</span>
     </div>
     
     <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -686,7 +686,7 @@ const LiveScanTable = ({ data }) => (
             <div key={idx} className="grid grid-cols-[auto_1fr_auto_auto] gap-4 p-2 px-4 items-center text-sm font-mono animate-[slideIn_0.3s_ease]">
               <div className="w-4 text-slate-500 text-[10px] text-right">{idx + 1}.</div>
               <div className="font-bold text-slate-200">{item.ticker}</div>
-              <div className={`font-bold ${item.score >= 70 ? 'text-[#D4A017]' : (item.score >= 55 ? 'text-slate-300' : 'text-slate-500')}`}>
+              <div className={`font-bold ${item.score >= 70 ? 'text-[#B8860B]' : (item.score >= 55 ? 'text-slate-300' : 'text-slate-500')}`}>
                 {item.score}<span className="text-[10px] text-slate-600 font-normal">/90</span>
               </div>
               <div className="w-24 text-center scale-75 origin-right"><Badge v={item.verdict} /></div>
@@ -711,7 +711,7 @@ const LeaderboardDisplay = ({ data, onSelect }) => {
       <div className="flex justify-between items-end mb-4 px-1">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-200 m-0"><span>🌎</span> Global Leaderboard</h3>
-          <p className="text-xs text-[#D4A017]/70 mt-1 font-mono tracking-tight">Scores represent a rolling median of the last 10 community analyses.</p>
+          <p className="text-xs text-[#B8860B]/70 mt-1 font-mono tracking-tight">Scores represent a rolling median of the last 10 community analyses.</p>
         </div>
       </div>
       <div className="bg-[#111827] border border-[#1E293B] rounded-lg overflow-hidden shadow-lg shadow-black/50">
@@ -727,23 +727,23 @@ const LeaderboardDisplay = ({ data, onSelect }) => {
           {data.map((item, idx) => (
             <div key={`${item.ticker}-${item.score}`} className="flex flex-col group transition-colors hover:bg-slate-800/80 cursor-pointer">
               <div onClick={() => onSelect(item)} className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] gap-4 p-3 px-5 items-center">
-                <div className={`w-6 text-center font-mono text-sm font-bold ${idx < 3 ? 'text-[#D4A017]' : 'text-slate-500 group-hover:text-slate-300'}`}>{idx + 1}</div>
+                <div className={`w-6 text-center font-mono text-sm font-bold ${idx < 3 ? 'text-[#B8860B]' : 'text-slate-500 group-hover:text-slate-300'}`}>{idx + 1}</div>
                 <div className="min-w-0">
                   <div className="font-mono font-bold text-slate-200 truncate flex items-center gap-2">
                     {item.ticker}
-                    {idx === 0 && <span className="text-[10px] bg-[#D4A017]/20 text-[#D4A017] px-1.5 py-0.5 rounded leading-none shrink-0 border border-[#D4A017]/30">#1</span>}
+                    {idx === 0 && <span className="text-[10px] bg-[#B8860B]/20 text-[#B8860B] px-1.5 py-0.5 rounded leading-none shrink-0 border border-[#B8860B]/30">#1</span>}
                   </div>
                   <div className="text-[11px] text-slate-500 truncate mt-0.5 flex flex-wrap items-center gap-2">
                     <span>{item.company}</span>
-                    {item.username && <span className="text-[#D4A017]/60 font-mono tracking-tight group-hover:text-[#D4A017] transition-colors border-l border-[#1E293B] pl-2">👤 {item.username}</span>}
+                    {item.username && <span className="text-[#B8860B]/60 font-mono tracking-tight group-hover:text-[#B8860B] transition-colors border-l border-[#1E293B] pl-2">👤 {item.username}</span>}
                     {item.recentScores?.length > 0 && (
-                      <button onClick={(e) => toggleExpand(e, item.ticker)} className="ml-auto text-[#D4A017]/60 hover:text-[#D4A017] px-2 py-0.5 rounded border border-[#1E293B] bg-slate-900 overflow-hidden shrink-0 flex items-center gap-1 transition-colors z-10">
+                      <button onClick={(e) => toggleExpand(e, item.ticker)} className="ml-auto text-[#B8860B]/60 hover:text-[#B8860B] px-2 py-0.5 rounded border border-[#1E293B] bg-slate-900 overflow-hidden shrink-0 flex items-center gap-1 transition-colors z-10">
                         📊 <span className="text-[9px] uppercase tracking-widest">{expanded[item.ticker] ? 'HIDE HISTORY' : 'VIEW HISTORY'}</span>
                       </button>
                     )}
                   </div>
                 </div>
-                <div className="text-right w-20 font-mono text-[#D4A017] font-bold text-base">{item.score}<span className="text-[10px] text-slate-600">/90</span></div>
+                <div className="text-right w-20 font-mono text-[#B8860B] font-bold text-base">{item.score}<span className="text-[10px] text-slate-600">/90</span></div>
                 <div className="hidden sm:block text-center w-28 scale-[0.8] origin-center"><Badge v={item.verdict} /></div>
                 <div className="hidden sm:block text-right w-20 font-mono text-sm text-slate-300">{item.price}</div>
               </div>
@@ -752,11 +752,11 @@ const LeaderboardDisplay = ({ data, onSelect }) => {
                 <div className="px-5 pb-4 pt-1 border-t border-slate-700/50 bg-[#0A0E17]/50 pointer-events-none cursor-default">
                   <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 flex justify-between">
                     <span>Recent calculation history (n={item.recentScores.length})</span>
-                    <span className="text-[#D4A017]">Running Median: {item.score}</span>
+                    <span className="text-[#B8860B]">Running Median: {item.score}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {item.recentScores.map((s, i) => (
-                      <div key={i} className={`px-2 py-1 rounded text-xs font-mono font-bold border ${Math.abs(s - item.score) <= 2 ? 'bg-[#D4A017]/10 text-[#D4A017] border-[#D4A017]/20 pointer-events-auto' : 'bg-slate-800 text-slate-400 border-slate-700 pointer-events-auto'}`}>
+                      <div key={i} className={`px-2 py-1 rounded text-xs font-mono font-bold border ${Math.abs(s - item.score) <= 2 ? 'bg-[#B8860B]/10 text-[#B8860B] border-[#B8860B]/20 pointer-events-auto' : 'bg-slate-800 text-slate-400 border-slate-700 pointer-events-auto'}`}>
                         {s}
                       </div>
                     ))}
@@ -778,7 +778,7 @@ const WatchlistGrid = ({ watchlist, onSelect }) => (
       {watchlist.map(item => (
         <div key={item.ticker} onClick={() => onSelect(item)} className="glass-button rounded-xl p-4 cursor-pointer hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-gold/10">
           <div className="flex justify-between items-start mb-2">
-            <span className="text-lg font-mono font-bold text-[#D4A017]">{item.ticker}</span>
+            <span className="text-lg font-mono font-bold text-[#B8860B]">{item.ticker}</span>
             {item.verdict && <div className="scale-75 origin-top-right"><Badge v={item.verdict} /></div>}
           </div>
           <div className="text-[13px] text-slate-400 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">{item.company}</div>
@@ -841,15 +841,15 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
               {mode === "predict" && (
                 <button 
                   onClick={() => { setTicker("AUTO"); onRun("predict", "AUTO"); }}
-                  className="mt-4 w-full py-3 bg-[#D4A017]/10 border border-[#D4A017]/30 text-[#D4A017] rounded-xl font-mono text-sm tracking-widest uppercase hover:bg-[#D4A017]/20 transition-colors cursor-pointer text-center"
+                  className="mt-4 w-full py-3 bg-[#B8860B]/10 border border-[#B8860B]/30 text-[#B8860B] rounded-xl font-mono text-sm tracking-widest uppercase hover:bg-[#B8860B]/20 transition-colors cursor-pointer text-center"
                 >
                   ☘️ Auto-Find Swing Trade
                 </button>
               )}
             </div>
             <div className="mb-6 relative z-10 flex gap-4">
-              <button onClick={() => setAssetType("stock")} className={`flex-1 py-3 rounded-xl font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${assetType === "stock" ? "bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]" : "bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200"}`}>Single Stock</button>
-              <button onClick={() => setAssetType("etf")} className={`flex-1 py-3 rounded-xl font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${assetType === "etf" ? "bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]" : "bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200"}`}>ETF (Fund)</button>
+              <button onClick={() => setAssetType("stock")} className={`flex-1 py-3 rounded-xl font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${assetType === "stock" ? "bg-[#B8860B] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]" : "bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200"}`}>Single Stock</button>
+              <button onClick={() => setAssetType("etf")} className={`flex-1 py-3 rounded-xl font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${assetType === "etf" ? "bg-[#B8860B] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]" : "bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200"}`}>ETF (Fund)</button>
             </div>
 
             {assetType === "etf" && (
@@ -861,19 +861,19 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
                 </label>
                 
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <button onClick={() => setEtfDepth("lite")} className={`p-3 rounded-lg text-left border cursor-pointer transition-colors ${etfDepth === "lite" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017]" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600"}`}>
+                  <button onClick={() => setEtfDepth("lite")} className={`p-3 rounded-lg text-left border cursor-pointer transition-colors ${etfDepth === "lite" ? "bg-[#B8860B]/10 border-[#B8860B] text-[#B8860B]" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600"}`}>
                     <div className="font-bold text-sm mb-1">Lite Mode</div>
                     <div className="text-[10px] text-slate-500 font-mono">Top 70% Weight / Max 20</div>
                   </button>
-                  <button onClick={() => isUnlocked && setEtfDepth("deep")} className={`p-3 rounded-lg text-left border transition-colors ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "deep" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
+                  <button onClick={() => isUnlocked && setEtfDepth("deep")} className={`p-3 rounded-lg text-left border transition-colors ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "deep" ? "bg-[#B8860B]/10 border-[#B8860B] text-[#B8860B] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
                     <div className="font-bold text-sm mb-1">Deep Analysis</div>
                     <div className="text-[10px] text-slate-500 font-mono">Top 90% Weight</div>
                   </button>
-                  <button onClick={() => isUnlocked && setEtfDepth("exhaustive")} className={`p-3 rounded-lg text-left border transition-colors ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "exhaustive" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
+                  <button onClick={() => isUnlocked && setEtfDepth("exhaustive")} className={`p-3 rounded-lg text-left border transition-colors ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "exhaustive" ? "bg-[#B8860B]/10 border-[#B8860B] text-[#B8860B] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
                     <div className="font-bold text-sm mb-1">Exhaustive</div>
                     <div className="text-[10px] text-slate-500 font-mono">100% of Holdings</div>
                   </button>
-                  <button onClick={() => isUnlocked && setEtfDepth("custom")} className={`p-3 rounded-lg text-left border transition-colors flex flex-col justify-center ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "custom" ? "bg-[#D4A017]/10 border-[#D4A017] text-[#D4A017] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
+                  <button onClick={() => isUnlocked && setEtfDepth("custom")} className={`p-3 rounded-lg text-left border transition-colors flex flex-col justify-center ${!isUnlocked ? "opacity-50 cursor-not-allowed bg-[#0A0E17] border-[#1E293B]" : etfDepth === "custom" ? "bg-[#B8860B]/10 border-[#B8860B] text-[#B8860B] cursor-pointer" : "bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-600 cursor-pointer"}`}>
                     <div className="font-bold text-sm mb-1">Custom Top N</div>
                     <div className="text-[10px] text-slate-500 font-mono">Specify exact count</div>
                   </button>
@@ -892,12 +892,12 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
               <div className="mb-8 relative z-10">
                 <label className="block text-xs text-slate-400 font-mono uppercase tracking-widest mb-2 flex justify-between">
                   <span>Provide Documents (Optional)</span>
-                  <span className="text-[#D4A017] lowercase">SEC filings or Earnings</span>
+                  <span className="text-[#B8860B] lowercase">SEC filings or Earnings</span>
                 </label>
                 <div 
-                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
-                  onDragLeave={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); }}
-                  onDrop={(e) => { e.currentTarget.classList.remove('border-[#D4A017]', 'bg-[#D4A017]/5'); handleDrop(e); }}
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[#B8860B]', 'bg-[#B8860B]/5'); }}
+                  onDragLeave={(e) => { e.currentTarget.classList.remove('border-[#B8860B]', 'bg-[#B8860B]/5'); }}
+                  onDrop={(e) => { e.currentTarget.classList.remove('border-[#B8860B]', 'bg-[#B8860B]/5'); handleDrop(e); }}
                   className="border-2 border-dashed border-[#1E293B] rounded-xl p-6 text-center transition-colors relative hover:border-slate-500"
                 >
                   <input type="file" multiple accept="application/pdf,text/plain,text/csv" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -938,7 +938,7 @@ const AnalysisForm = ({ mode, ticker, setTicker, onRun, onBack, inputRef, market
                 <button
                   key={mc}
                   onClick={() => setMarketCapFilter(mc)}
-                  className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors cursor-pointer ${marketCapFilter === mc ? 'bg-[#D4A017]/15 border-[#D4A017] text-[#D4A017]' : 'bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-500'}`}
+                  className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors cursor-pointer ${marketCapFilter === mc ? 'bg-[#B8860B]/15 border-[#B8860B] text-[#B8860B]' : 'bg-[#0A0E17] border-[#1E293B] text-slate-400 hover:border-slate-500'}`}
                 >
                   {mc}
                 </button>
@@ -960,11 +960,11 @@ const LoadingState = ({ message, isAutonomous, scanLength = 1 }) => {
   return (
     <div className="animate-[fadeIn_0.4s_ease] text-center pt-20">
       <div className="relative w-16 h-16 mx-auto mb-7">
-        <div className="absolute inset-0 border-2 border-[#1E293B] border-t-[#D4A017] rounded-full animate-[spin_1s_linear_infinite]" />
+        <div className="absolute inset-0 border-2 border-[#1E293B] border-t-[#B8860B] rounded-full animate-[spin_1s_linear_infinite]" />
         <div className="absolute inset-2 border-2 border-[#1E293B] border-b-amber-500 rounded-full animate-[spin_1.5s_linear_infinite_reverse]" />
       </div>
       <div className="font-mono text-[13px] text-slate-400 whitespace-pre-line leading-loose text-center max-w-xl mx-auto">
-        <span className="inline-block w-2 h-2 rounded-full bg-[#D4A017] mr-2.5 animate-[pulse_1.5s_ease-in-out_infinite]" />{message}
+        <span className="inline-block w-2 h-2 rounded-full bg-[#B8860B] mr-2.5 animate-[pulse_1.5s_ease-in-out_infinite]" />{message}
       </div>
       <div className="mt-6 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
         {isAutonomous 
@@ -1005,7 +1005,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
         <div className="flex justify-between items-start flex-wrap gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-3 mb-1.5">
-              <span className="text-3xl font-mono font-bold text-[#D4A017]">{h.TICKER || currentTicker || "N/A"}</span>
+              <span className="text-3xl font-mono font-bold text-[#B8860B]">{h.TICKER || currentTicker || "N/A"}</span>
               {parsed.VERDICT && <Badge v={parsed.VERDICT} />}
               {currentTicker && (
                 <button className="print:hidden bg-transparent border-none cursor-pointer text-2xl px-1 hover:scale-110 transition-transform duration-200" style={{ opacity: isSaved ? 1 : 0.4 }} onClick={toggleWatchlist} title={isSaved ? "Remove from Watchlist" : "Save to Watchlist"}>
@@ -1020,7 +1020,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
           </div>
           <div className="text-right">
             <div className="print:hidden mb-3">
-              <button onClick={() => window.print()} className="bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border border-[#D4A017] text-[#D4A017] px-3 py-1.5 rounded cursor-pointer text-xs font-mono inline-flex items-center gap-1.5 transition-colors">📄 Export PDF</button>
+              <button onClick={() => window.print()} className="bg-[#B8860B]/10 hover:bg-[#B8860B]/20 border border-[#B8860B] text-[#B8860B] px-3 py-1.5 rounded cursor-pointer text-xs font-mono inline-flex items-center gap-1.5 transition-colors">📄 Export PDF</button>
             </div>
             {price && <div className="text-3xl font-mono font-bold text-slate-200">{price}</div>}
             {live && (
@@ -1047,7 +1047,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
             <ScoreBar label="Cash Flow" score={sc.CASH_FLOW} />
             <ScoreBar label="Valuation" score={sc.VALUATION} />
             <ScoreBar label="Capital Alloc" score={sc.CAPITAL_ALLOCATION} />
-            <div className="border-t border-[#1E293B] pt-2.5 mt-2.5 flex justify-between font-mono text-sm font-bold"><span className="text-slate-400">TOTAL</span><span className="text-[#D4A017]">{qn}/50</span></div>
+            <div className="border-t border-[#1E293B] pt-2.5 mt-2.5 flex justify-between font-mono text-sm font-bold"><span className="text-slate-400">TOTAL</span><span className="text-[#B8860B]">{qn}/50</span></div>
           </div>
           <div className="bg-[#111827] border border-[#1E293B] rounded-lg p-5 px-6 print:break-inside-avoid">
             <div className="text-[11px] font-mono text-slate-400 uppercase tracking-widest mb-3.5">Qualitative</div>
@@ -1055,8 +1055,8 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
             <ScoreBar label="Management" score={sc.MANAGEMENT} />
             <ScoreBar label="Catalyst" score={sc.CATALYST} />
             <ScoreBar label="Risk (10=low)" score={sc.RISK_PROFILE} />
-            <div className="border-t border-[#1E293B] pt-2.5 mt-2.5 flex justify-between font-mono text-sm font-bold"><span className="text-slate-400">TOTAL</span><span className="text-[#D4A017]">{ql}/40</span></div>
-            <div className="border-t border-[#1E293B] pt-2.5 mt-2.5 flex justify-between font-mono text-base font-bold text-slate-200"><span className="text-slate-200">COMPOSITE</span><span className="text-[#D4A017]">{tot}/90</span></div>
+            <div className="border-t border-[#1E293B] pt-2.5 mt-2.5 flex justify-between font-mono text-sm font-bold"><span className="text-slate-400">TOTAL</span><span className="text-[#B8860B]">{ql}/40</span></div>
+            <div className="border-t border-[#1E293B] pt-2.5 mt-2.5 flex justify-between font-mono text-base font-bold text-slate-200"><span className="text-slate-200">COMPOSITE</span><span className="text-[#B8860B]">{tot}/90</span></div>
           </div>
         </div>
       )}
@@ -1107,7 +1107,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
       )}
 
       {/* Text Sections */}
-      {parsed.THESIS && <Section title="Investment Thesis" icon="💡"><div className="border-l-4 border-[#D4A017] pl-4 italic text-slate-300 tracking-wide leading-relaxed">{parsed.THESIS}</div></Section>}
+      {parsed.THESIS && <Section title="Investment Thesis" icon="💡"><div className="border-l-4 border-[#B8860B] pl-4 italic text-slate-300 tracking-wide leading-relaxed">{parsed.THESIS}</div></Section>}
       {parsed.SCREENING_RATIONALE && <Section title="Why This Name Surfaced" icon="🎯">{parsed.SCREENING_RATIONALE}</Section>}
       {parsed.EARNINGS_FORECAST && <Section title="Future Earnings Forecast" icon="🔮">{parsed.EARNINGS_FORECAST}</Section>}
       {parsed.INCOME_STATEMENT && <Section title="Income Statement (DuPont Analysis)" icon="📊">{parsed.INCOME_STATEMENT}</Section>}
@@ -1149,7 +1149,7 @@ const AnalysisResults = ({ parsed, lq, rawResult, currentTicker, isSaved, toggle
         <pre className="mt-2 bg-[#111827] border border-[#1E293B] rounded-lg p-5 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-slate-400 max-h-[400px] overflow-auto">{rawResult}</pre>
       </details>
 
-      <div className="print:hidden mt-6 p-3.5 px-5 bg-[#D4A017]/10 rounded-md border border-[#D4A017]/20 text-[11px] text-slate-500 leading-relaxed text-center">
+      <div className="print:hidden mt-6 p-3.5 px-5 bg-[#B8860B]/10 rounded-md border border-[#B8860B]/20 text-[11px] text-slate-500 leading-relaxed text-center">
         Educational and research purposes only. Not financial advice.{live && " Price data via Finnhub."}
       </div>
     </div>
@@ -1186,7 +1186,7 @@ const ChatBubble = ({ geminiKey }) => {
           parts.push(line.substring(lastIndex, match.index));
         }
         parts.push(
-          <a key={`link-${lineIndex}-${match.index}`} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-[#D4A017] hover:text-[#B8860B] font-semibold underline underline-offset-4 break-none transition-colors">
+          <a key={`link-${lineIndex}-${match.index}`} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-[#B8860B] hover:text-[#B8860B] font-semibold underline underline-offset-4 break-none transition-colors">
             {match[1]}
           </a>
         );
@@ -1249,7 +1249,7 @@ const ChatBubble = ({ geminiKey }) => {
     <>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-8 right-8 flex items-center justify-center transition-all cursor-pointer z-[9999] border-none ${isOpen ? 'w-14 h-14 bg-gradient-to-br from-[#D4A017] to-[#B8860B] rounded-full text-2xl shadow-[0_0_20px_rgba(212,160,23,0.3)] text-[#0A0E17] hover:scale-110' : 'w-20 h-20 bg-transparent hover:scale-105'}`}
+        className={`fixed bottom-8 right-8 flex items-center justify-center transition-all cursor-pointer z-[9999] border-none ${isOpen ? 'w-14 h-14 bg-gradient-to-br from-[#B8860B] to-[#B8860B] rounded-full text-2xl shadow-[0_0_20px_rgba(212,160,23,0.3)] text-[#0A0E17] hover:scale-110' : 'w-20 h-20 bg-transparent hover:scale-105'}`}
         style={{ zIndex: 9999 }}
       >
         {isOpen ? "✕" : <img src="/chat-icon.png" alt="Chat AI" className="w-full h-full object-contain mix-blend-screen opacity-80 hover:opacity-100 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-opacity" />}
@@ -1291,7 +1291,7 @@ const ChatBubble = ({ geminiKey }) => {
                             }
                           }
                         }}
-                        className={`text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-all text-left border ${isActive ? 'bg-[#D4A017] text-[#0A0E17] border-[#D4A017] scale-105 shadow-[0_0_10px_rgba(212,160,23,0.4)] font-bold' : 'bg-[#D4A017]/10 hover:bg-[#D4A017]/20 border-[#D4A017]/30 text-[#D4A017]'}`}
+                        className={`text-[10px] font-mono uppercase tracking-wider py-1.5 px-3 rounded-full cursor-pointer transition-all text-left border ${isActive ? 'bg-[#B8860B] text-[#0A0E17] border-[#B8860B] scale-105 shadow-[0_0_10px_rgba(212,160,23,0.4)] font-bold' : 'bg-[#B8860B]/10 hover:bg-[#B8860B]/20 border-[#B8860B]/30 text-[#B8860B]'}`}
                       >
                         {p.icon} {p.label}
                       </button>
@@ -1301,15 +1301,15 @@ const ChatBubble = ({ geminiKey }) => {
               </div>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`max-w-[85%] rounded-xl p-3 text-[13px] leading-relaxed ${m.role === 'user' ? 'bg-[#D4A017]/10 border border-[#D4A017]/20 text-slate-200 self-end rounded-tr-sm' : 'bg-[#111827] border border-[#1E293B] text-slate-300 self-start rounded-tl-sm'}`}>
+              <div key={i} className={`max-w-[85%] rounded-xl p-3 text-[13px] leading-relaxed ${m.role === 'user' ? 'bg-[#B8860B]/10 border border-[#B8860B]/20 text-slate-200 self-end rounded-tr-sm' : 'bg-[#111827] border border-[#1E293B] text-slate-300 self-start rounded-tl-sm'}`}>
                 {renderMessageText(m.text)}
               </div>
             ))}
             {isTyping && (
               <div className="bg-[#111827] border border-[#1E293B] text-slate-400 rounded-xl p-3 text-[13px] max-w-[85%] self-start rounded-tl-sm flex gap-1 items-center">
-                <span className="w-1.5 h-1.5 bg-[#D4A017] rounded-full animate-bounce"></span>
-                <span className="w-1.5 h-1.5 bg-[#D4A017] rounded-full animate-bounce delay-75"></span>
-                <span className="w-1.5 h-1.5 bg-[#D4A017] rounded-full animate-bounce delay-150"></span>
+                <span className="w-1.5 h-1.5 bg-[#B8860B] rounded-full animate-bounce"></span>
+                <span className="w-1.5 h-1.5 bg-[#B8860B] rounded-full animate-bounce delay-75"></span>
+                <span className="w-1.5 h-1.5 bg-[#B8860B] rounded-full animate-bounce delay-150"></span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -1317,7 +1317,7 @@ const ChatBubble = ({ geminiKey }) => {
 
           <form onSubmit={handleSend} className="p-3 bg-[#111827] border-t border-[#1E293B] flex gap-2 relative">
             {activePrompt && !activePrompt.instant && (
-              <div className="absolute -top-6 left-3 bg-[#D4A017] text-[#0A0E17] text-[9px] font-mono font-bold px-2 py-0.5 rounded-t-md flex items-center gap-2 shadow-[0_-4px_10px_rgba(212,160,23,0.15)] z-10">
+              <div className="absolute -top-6 left-3 bg-[#B8860B] text-[#0A0E17] text-[9px] font-mono font-bold px-2 py-0.5 rounded-t-md flex items-center gap-2 shadow-[0_-4px_10px_rgba(212,160,23,0.15)] z-10">
                 {activePrompt.icon} {activePrompt.label}
                 <button type="button" onClick={() => setActivePrompt(null)} className="bg-transparent border-none text-[#0A0E17]/60 hover:text-[#0A0E17] cursor-pointer p-0 ml-1">✕</button>
               </div>
@@ -1327,9 +1327,9 @@ const ChatBubble = ({ geminiKey }) => {
               value={input} 
               onChange={e => setInput(e.target.value)} 
               placeholder={activePrompt ? `Enter ticker for ${activePrompt.label}...` : "Ask anything or click a prompt..."}
-              className={`flex-1 bg-[#0A0E17] border focus:border-[#D4A017] rounded-lg px-3 py-2 text-sm outline-none transition-colors relative z-20 ${activePrompt ? 'border-[#D4A017] text-[#D4A017] font-mono font-bold' : 'border-[#1E293B] text-slate-200'}`}
+              className={`flex-1 bg-[#0A0E17] border focus:border-[#B8860B] rounded-lg px-3 py-2 text-sm outline-none transition-colors relative z-20 ${activePrompt ? 'border-[#B8860B] text-[#B8860B] font-mono font-bold' : 'border-[#1E293B] text-slate-200'}`}
             />
-            <button type="submit" disabled={isTyping || (!input.trim() && !activePrompt?.instant)} className="bg-[#D4A017] text-[#0A0E17] rounded-lg px-4 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#B8860B] transition-colors border-none font-bold relative z-20">
+            <button type="submit" disabled={isTyping || (!input.trim() && !activePrompt?.instant)} className="bg-[#B8860B] text-[#0A0E17] rounded-lg px-4 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#B8860B] transition-colors border-none font-bold relative z-20">
               ➤
             </button>
           </form>
@@ -1922,7 +1922,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0E17] text-slate-200 font-sans selection:bg-[#D4A017] selection:text-[#0A0E17]">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#0A0E17] text-slate-200 font-sans selection:bg-[#B8860B] selection:text-[#0A0E17]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
         @media print { body { background: #0A0E17 !important; color: #E2E8F0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }
@@ -1936,9 +1936,9 @@ export default function App() {
             <h3 className="text-xl font-semibold text-slate-200 m-0 mb-2">Unlock Advanced Features</h3>
             <p className="text-sm text-slate-400 m-0 mb-6 leading-relaxed">Enter PIN to access deep ETF analysis, 100-max scan lengths, and auto-populated API keys.</p>
             <form onSubmit={(e) => { e.preventDefault(); fetchKeysWithPin(pinInput, true); }}>
-              <input type="password" autoFocus value={pinInput} onChange={(e) => { setPinInput(e.target.value); setPinError(""); }} placeholder="Enter PIN..." className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#D4A017] text-slate-200 px-4 py-3 rounded-xl mb-4 text-center text-lg tracking-[0.5em] font-mono outline-none" />
+              <input type="password" autoFocus value={pinInput} onChange={(e) => { setPinInput(e.target.value); setPinError(""); }} placeholder="Enter PIN..." className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#B8860B] text-slate-200 px-4 py-3 rounded-xl mb-4 text-center text-lg tracking-[0.5em] font-mono outline-none" />
               {pinError && <div className="text-red-500 text-xs font-mono text-center mb-4">{pinError}</div>}
-              <button type="submit" className="w-full bg-gradient-to-r from-[#D4A017] to-[#B8860B] text-[#0A0E17] font-semibold py-3 rounded-xl cursor-pointer hover:opacity-90 transition-opacity">Unlock</button>
+              <button type="submit" className="w-full bg-gradient-to-r from-[#B8860B] to-[#B8860B] text-[#0A0E17] font-semibold py-3 rounded-xl cursor-pointer hover:opacity-90 transition-opacity">Unlock</button>
             </form>
           </div>
         </div>
@@ -1955,23 +1955,23 @@ export default function App() {
             </div>
             
             <div className="flex rounded-lg bg-[#111827] p-1 mb-5">
-               <button onClick={() => {setAuthMode("login"); setAuthError("");}} className={`flex-1 text-xs py-2 rounded-md font-mono transition-colors ${authMode==="login"?'bg-[#D4A017] text-[#0A0E17] font-bold':'text-slate-400 hover:text-slate-200 cursor-pointer'}`}>SIGN IN</button>
-               <button onClick={() => {setAuthMode("register"); setAuthError("");}} className={`flex-1 text-xs py-2 rounded-md font-mono transition-colors ${authMode==="register"?'bg-[#D4A017] text-[#0A0E17] font-bold':'text-slate-400 hover:text-slate-200 cursor-pointer'}`}>REGISTER</button>
+               <button onClick={() => {setAuthMode("login"); setAuthError("");}} className={`flex-1 text-xs py-2 rounded-md font-mono transition-colors ${authMode==="login"?'bg-[#B8860B] text-[#0A0E17] font-bold':'text-slate-400 hover:text-slate-200 cursor-pointer'}`}>SIGN IN</button>
+               <button onClick={() => {setAuthMode("register"); setAuthError("");}} className={`flex-1 text-xs py-2 rounded-md font-mono transition-colors ${authMode==="register"?'bg-[#B8860B] text-[#0A0E17] font-bold':'text-slate-400 hover:text-slate-200 cursor-pointer'}`}>REGISTER</button>
             </div>
 
             <form onSubmit={handleAuthSubmit}>
               <div className="mb-4">
                 <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Username</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} required minLength={3} className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#D4A017] text-slate-200 px-4 py-3 rounded-xl text-sm outline-none" placeholder="analyst_01" />
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} required minLength={3} className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#B8860B] text-slate-200 px-4 py-3 rounded-xl text-sm outline-none" placeholder="analyst_01" />
               </div>
               <div className="mb-4">
                 <label className="text-[10px] text-slate-500 font-mono uppercase tracking-widest block mb-1">Password</label>
-                <input type="password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required minLength={6} className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#D4A017] text-slate-200 px-4 py-3 rounded-xl text-sm outline-none" placeholder="••••••" />
+                <input type="password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required minLength={6} className="w-full bg-[#111827] border border-[#1E293B] focus:border-[#B8860B] text-slate-200 px-4 py-3 rounded-xl text-sm outline-none" placeholder="••••••" />
               </div>
               
               {authError && <div className="text-red-500 text-xs text-center mb-4">{authError}</div>}
               
-              <button type="submit" disabled={authLoading} className="w-full bg-gradient-to-r from-[#D4A017] to-[#B8860B] text-[#0A0E17] font-semibold py-3 rounded-xl cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50">
+              <button type="submit" disabled={authLoading} className="w-full bg-gradient-to-r from-[#B8860B] to-[#B8860B] text-[#0A0E17] font-semibold py-3 rounded-xl cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50">
                 {authLoading ? "Processing..." : authMode === "login" ? "Secure Login" : "Create Profile"}
               </button>
             </form>
@@ -1986,8 +1986,8 @@ export default function App() {
           <>
             <WelcomeScreen setMode={setMode} scanLength={scanLength} setScanLength={setScanLength} isUnlocked={isUnlocked} onUnlockClick={() => { setPinInput(""); setPinError(""); setShowPinModal(true); }} isLoggedIn={isLoggedIn} username={username} onLoginClick={() => setShowLoginModal(true)} onLogout={handleLogout} />
             <div className="flex justify-center gap-4 mb-4 mt-6">
-               <button onClick={() => setShowEtfs(false)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${!showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>Stocks</button>
-               <button onClick={() => setShowEtfs(true)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${showEtfs ? 'bg-[#D4A017] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>ETFs Tracker</button>
+               <button onClick={() => setShowEtfs(false)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${!showEtfs ? 'bg-[#B8860B] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>Stocks</button>
+               <button onClick={() => setShowEtfs(true)} className={`px-5 py-2 rounded-full font-mono text-sm tracking-widest uppercase font-bold transition-all duration-300 cursor-pointer ${showEtfs ? 'bg-[#B8860B] text-[#0A0E17] shadow-[0_0_15px_rgba(212,160,23,0.3)]' : 'bg-transparent text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-slate-200'}`}>ETFs Tracker</button>
             </div>
             <LeaderboardDisplay data={showEtfs ? etfLeaderboard : leaderboard} onSelect={handleHistorySelect} />
             {watchlist.length > 0 && <WatchlistGrid watchlist={watchlist} onSelect={handleHistorySelect} />}
@@ -2012,9 +2012,9 @@ export default function App() {
                     <button
                       key={item.ticker + idx}
                       onClick={() => run("analyze", item.ticker)}
-                      className="bg-[#0A0E17] border border-[#1E293B] hover:border-[#D4A017] rounded-xl p-4 cursor-pointer transition-all duration-200 group flex flex-col items-center shadow-md"
+                      className="bg-[#0A0E17] border border-[#1E293B] hover:border-[#B8860B] rounded-xl p-4 cursor-pointer transition-all duration-200 group flex flex-col items-center shadow-md"
                     >
-                      <div className="text-xl font-mono font-bold text-slate-200 group-hover:text-[#D4A017] transition-colors">{item.ticker}</div>
+                      <div className="text-xl font-mono font-bold text-slate-200 group-hover:text-[#B8860B] transition-colors">{item.ticker}</div>
                       <div className={`text-sm font-mono font-semibold mt-1 mb-2 ${item.score >= 60 ? 'text-amber-500' : 'text-red-500'}`}>{item.score}/90</div>
                       <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-auto opacity-50 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
                         <span>Analyze</span> <span className="text-[10px]">→</span>
@@ -2026,7 +2026,7 @@ export default function App() {
             )}
 
             <div className="flex justify-center gap-4">
-              <button onClick={() => run()} className="bg-gradient-to-br from-[#D4A017] to-[#B8860B] text-[#0A0E17] hover:opacity-90 px-8 py-3 rounded-md font-semibold text-[15px] transition-all cursor-pointer shadow-lg shadow-[#D4A017]/10">
+              <button onClick={() => run()} className="bg-gradient-to-br from-[#B8860B] to-[#B8860B] text-[#0A0E17] hover:opacity-90 px-8 py-3 rounded-md font-semibold text-[15px] transition-all cursor-pointer shadow-lg shadow-[#B8860B]/10">
                 Spin Again
               </button>
               <button onClick={() => setUnlucky(false)} className="bg-transparent border border-[#1E293B] hover:border-slate-600 text-slate-300 px-6 py-3 rounded-md font-mono text-[13px] transition-colors cursor-pointer">

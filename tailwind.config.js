@@ -12,7 +12,7 @@ export default {
       },
       colors: {
         brand: {
-          gold: '#D4A017',
+          gold: '#B8860B',
           dark: '#0A0E17',
           panel: '#111827',
           panelHover: '#1A2332',
